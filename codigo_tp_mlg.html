@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.6.42">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>TP - MLG</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="codigo_tp_mlg_files/libs/clipboard/clipboard.min.js"></script>
+<script src="codigo_tp_mlg_files/libs/quarto-html/quarto.js"></script>
+<script src="codigo_tp_mlg_files/libs/quarto-html/popper.min.js"></script>
+<script src="codigo_tp_mlg_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="codigo_tp_mlg_files/libs/quarto-html/anchor.min.js"></script>
+<link href="codigo_tp_mlg_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="codigo_tp_mlg_files/libs/quarto-html/quarto-syntax-highlighting-2f5df379a58b258e96c21c0638c20c03.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="codigo_tp_mlg_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="codigo_tp_mlg_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="codigo_tp_mlg_files/libs/bootstrap/bootstrap-1bc8a17f135ab3d594c857e9f48e611b.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script src="codigo_tp_mlg_files/libs/kePrint-0.0.1/kePrint.js"></script>
+
+<link href="codigo_tp_mlg_files/libs/lightable-0.0.1/lightable.css" rel="stylesheet">
+
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">TP - MLG</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>
+  0   1 
+261 130 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+        0         1 
+0.6675192 0.3324808 </code></pre>
+</div>
+<div class="cell-output-display">
+<table class="table table-striped table-hover caption-top table-sm small" data-quarto-postprocess="true">
+<caption>Distribución de la variable respuesta: Diabetes</caption>
+<thead>
+<tr class="header">
+<th style="text-align: center;" data-quarto-table-cell-role="th">Diabetes</th>
+<th style="text-align: center;" data-quarto-table-cell-role="th">Frecuencia</th>
+<th style="text-align: center;" data-quarto-table-cell-role="th">Porcentaje (%)</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">No</td>
+<td style="text-align: center;">261</td>
+<td style="text-align: center;">66.8</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">Sí</td>
+<td style="text-align: center;">130</td>
+<td style="text-align: center;">33.2</td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">Total</td>
+<td style="text-align: center;">391</td>
+<td style="text-align: center;">100.0</td>
+</tr>
+</tbody>
+</table>
+
+
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="codigo_tp_mlg_files/figure-html/unnamed-chunk-4-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<caption>Data summary</caption>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">datos</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Number of rows</td>
+<td style="text-align: left;">391</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Number of columns</td>
+<td style="text-align: left;">7</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">_______________________</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Column type frequency:</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">factor</td>
+<td style="text-align: left;">5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">numeric</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">________________________</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Group variables</td>
+<td style="text-align: left;">None</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: factor</strong></p>
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 12%">
+<col style="width: 18%">
+<col style="width: 10%">
+<col style="width: 11%">
+<col style="width: 28%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">skim_variable</th>
+<th style="text-align: right;">n_missing</th>
+<th style="text-align: right;">complete_rate</th>
+<th style="text-align: left;">ordered</th>
+<th style="text-align: right;">n_unique</th>
+<th style="text-align: left;">top_counts</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">glucosa</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">1: 275, 0: 116</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">presion</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">0: 313, 1: 78</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">dpf</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">0: 223, 1: 168</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">embarazo</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">3</td>
+<td style="text-align: left;">1: 202, 2: 133, 0: 56</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">obesidad</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">FALSE</td>
+<td style="text-align: right;">2</td>
+<td style="text-align: left;">1: 262, 0: 129</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Variable type: numeric</strong></p>
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 18%">
+<col style="width: 13%">
+<col style="width: 18%">
+<col style="width: 8%">
+<col style="width: 6%">
+<col style="width: 4%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 5%">
+<col style="width: 6%">
+<col style="width: 8%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">skim_variable</th>
+<th style="text-align: right;">n_missing</th>
+<th style="text-align: right;">complete_rate</th>
+<th style="text-align: right;">mean</th>
+<th style="text-align: right;">sd</th>
+<th style="text-align: right;">p0</th>
+<th style="text-align: right;">p25</th>
+<th style="text-align: right;">p50</th>
+<th style="text-align: right;">p75</th>
+<th style="text-align: right;">p100</th>
+<th style="text-align: left;">hist</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">edad</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">30.74</td>
+<td style="text-align: right;">9.89</td>
+<td style="text-align: right;">21</td>
+<td style="text-align: right;">23</td>
+<td style="text-align: right;">27</td>
+<td style="text-align: right;">36</td>
+<td style="text-align: right;">63</td>
+<td style="text-align: left;">▇▂▂▁▁</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">diabetes</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">0.33</td>
+<td style="text-align: right;">0.47</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: right;">1</td>
+<td style="text-align: left;">▇▁▁▁▃</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 5
+# Groups:   obesidad [2]
+  obesidad presion diabetes     n   prop
+  &lt;fct&gt;    &lt;fct&gt;      &lt;dbl&gt; &lt;int&gt;  &lt;dbl&gt;
+1 0        0              0    98 0.760 
+2 0        0              1    18 0.140 
+3 0        1              0    11 0.0853
+4 0        1              1     2 0.0155
+5 1        0              0   124 0.473 
+6 1        0              1    73 0.279 
+7 1        1              0    28 0.107 
+8 1        1              1    37 0.141 </code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="codigo_tp_mlg_files/figure-html/unnamed-chunk-6-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="codigo_tp_mlg_files/figure-html/unnamed-chunk-6-2.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="codigo_tp_mlg_files/figure-html/unnamed-chunk-6-3.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="codigo_tp_mlg_files/figure-html/unnamed-chunk-6-4.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="codigo_tp_mlg_files/figure-html/unnamed-chunk-6-5.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="codigo_tp_mlg_files/figure-html/unnamed-chunk-6-6.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="selección-de-variables" class="level1">
+<h1>Selección de variables</h1>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>Start:  AIC=430.4
+diabetes ~ 1
+
+           Df Deviance    AIC
++ edad      1   382.36 386.36
++ glucosa   1   382.45 386.45
++ obesidad  1   401.86 405.86
++ dpf       1   413.72 417.72
++ embarazo  2   411.90 417.90
++ presion   1   416.23 420.23
+&lt;none&gt;          428.40 430.40
+
+Step:  AIC=386.36
+diabetes ~ edad
+
+           Df Deviance    AIC
++ glucosa   1   349.32 355.32
++ obesidad  1   360.42 366.42
++ dpf       1   370.43 376.43
++ presion   1   377.83 383.83
++ embarazo  2   377.45 385.45
+&lt;none&gt;          382.36 386.36
+
+Step:  AIC=355.32
+diabetes ~ edad + glucosa
+
+           Df Deviance    AIC
++ obesidad  1   330.10 338.10
++ dpf       1   338.02 346.02
++ presion   1   345.93 353.93
++ embarazo  2   344.74 354.74
+&lt;none&gt;          349.32 355.32
+
+Step:  AIC=338.1
+diabetes ~ edad + glucosa + obesidad
+
+           Df Deviance    AIC
++ dpf       1   317.49 327.49
+&lt;none&gt;          330.10 338.10
++ presion   1   328.32 338.32
++ embarazo  2   327.52 339.52
+
+Step:  AIC=327.49
+diabetes ~ edad + glucosa + obesidad + dpf
+
+           Df Deviance    AIC
+&lt;none&gt;          317.49 327.49
++ presion   1   315.96 327.96
++ embarazo  2   315.24 329.24</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Start:  AIC=330.16
+diabetes ~ edad + glucosa + presion + dpf + embarazo + obesidad
+
+           Df Deviance    AIC
+- embarazo  2   315.96 327.96
+- presion   1   315.24 329.24
+&lt;none&gt;          314.16 330.16
+- dpf       1   326.23 340.23
+- obesidad  1   331.30 345.30
+- edad      1   334.18 348.18
+- glucosa   1   343.56 357.56
+
+Step:  AIC=327.96
+diabetes ~ edad + glucosa + presion + dpf + obesidad
+
+           Df Deviance    AIC
+- presion   1   317.49 327.49
+&lt;none&gt;          315.96 327.96
+- dpf       1   328.32 338.32
+- obesidad  1   334.81 344.81
+- edad      1   341.96 351.96
+- glucosa   1   345.32 355.32
+
+Step:  AIC=327.49
+diabetes ~ edad + glucosa + dpf + obesidad
+
+           Df Deviance    AIC
+&lt;none&gt;          317.49 327.49
+- dpf       1   330.10 338.10
+- obesidad  1   338.02 346.02
+- edad      1   347.22 355.22
+- glucosa   1   347.52 355.52</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = diabetes ~ edad + glucosa + dpf + obesidad, family = binomial(link = "logit"), 
+    data = datos_train)
+
+Coefficients:
+            Estimate Std. Error z value    Pr(&gt;|z|)    
+(Intercept) -6.04124    0.72242  -8.363     &lt; 2e-16 ***
+edad         0.07508    0.01484   5.061 0.000000417 ***
+glucosa1     1.91181    0.39841   4.799 0.000001598 ***
+dpf1         0.97519    0.27921   3.493    0.000478 ***
+obesidad1    1.46637    0.34802   4.213 0.000025154 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 428.40  on 331  degrees of freedom
+Residual deviance: 317.49  on 327  degrees of freedom
+AIC: 327.49
+
+Number of Fisher Scoring iterations: 5</code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 5
+# Groups:   obesidad [2]
+  obesidad glucosa diabetes     n    prop
+  &lt;fct&gt;    &lt;fct&gt;      &lt;dbl&gt; &lt;int&gt;   &lt;dbl&gt;
+1 0        0              0    40 0.374  
+2 0        0              1     1 0.00935
+3 0        1              0    50 0.467  
+4 0        1              1    16 0.150  
+5 1        0              0    49 0.218  
+6 1        0              1     8 0.0356 
+7 1        1              0    78 0.347  
+8 1        1              1    90 0.4    </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 5
+# Groups:   obesidad [2]
+  obesidad dpf   diabetes     n   prop
+  &lt;fct&gt;    &lt;fct&gt;    &lt;dbl&gt; &lt;int&gt;  &lt;dbl&gt;
+1 0        0            0    55 0.514 
+2 0        0            1     8 0.0748
+3 0        1            0    35 0.327 
+4 0        1            1     9 0.0841
+5 1        0            0    85 0.378 
+6 1        0            1    41 0.182 
+7 1        1            0    42 0.187 
+8 1        1            1    57 0.253 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 8 × 5
+# Groups:   dpf [2]
+  dpf   glucosa diabetes     n   prop
+  &lt;fct&gt; &lt;fct&gt;      &lt;dbl&gt; &lt;int&gt;  &lt;dbl&gt;
+1 0     0              0    57 0.302 
+2 0     0              1     4 0.0212
+3 0     1              0    83 0.439 
+4 0     1              1    45 0.238 
+5 1     0              0    32 0.224 
+6 1     0              1     5 0.0350
+7 1     1              0    45 0.315 
+8 1     1              1    61 0.427 </code></pre>
+</div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>Start:  AIC=327.49
+diabetes ~ edad + glucosa + dpf + obesidad
+
+                   Df Deviance    AIC
++ dpf:obesidad      1   314.47 326.47
+&lt;none&gt;                  317.49 327.49
++ edad:glucosa      1   317.35 329.35
++ glucosa:obesidad  1   317.45 329.45
++ edad:obesidad     1   317.46 329.46
++ glucosa:dpf       1   317.47 329.47
++ edad:dpf          1   317.48 329.48
+- dpf               1   330.10 338.10
+- obesidad          1   338.02 346.02
+- edad              1   347.22 355.22
+- glucosa           1   347.52 355.52
+
+Step:  AIC=326.47
+diabetes ~ edad + glucosa + dpf + obesidad + dpf:obesidad
+
+                   Df Deviance    AIC
+&lt;none&gt;                  314.47 326.47
+- dpf:obesidad      1   317.49 327.49
++ edad:obesidad     1   314.37 328.37
++ edad:glucosa      1   314.37 328.37
++ glucosa:dpf       1   314.41 328.41
++ glucosa:obesidad  1   314.45 328.45
++ edad:dpf          1   314.46 328.46
+- glucosa           1   344.84 354.84
+- edad              1   346.04 356.04</code></pre>
+</div>
+</div>
+<section id="bondad-de-ajuste" class="level2">
+<h2 class="anchored" data-anchor-id="bondad-de-ajuste">Bondad de ajuste</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0.6365891</code></pre>
+</div>
+</div>
+</section>
+<section id="verificación-el-enlace-elegido" class="level2">
+<h2 class="anchored" data-anchor-id="verificación-el-enlace-elegido">Verificación el enlace elegido</h2>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="codigo_tp_mlg_files/figure-html/unnamed-chunk-13-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Analysis of Deviance Table
+
+Model 1: diabetes ~ edad + glucosa + dpf + obesidad
+Model 2: diabetes ~ glucosa + obesidad + edad + dpf + pred.2.logit
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       327     317.49                     
+2       326     317.28  1  0.20728   0.6489</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = diabetes ~ glucosa + obesidad + edad + dpf + pred.2.logit, 
+    family = binomial(link = "logit"), data = datos_train)
+
+Coefficients:
+             Estimate Std. Error z value      Pr(&gt;|z|)    
+(Intercept)  -5.77245    0.91927  -6.279 0.00000000034 ***
+glucosa1      1.78401    0.48396   3.686      0.000228 ***
+obesidad1     1.38501    0.39021   3.549      0.000386 ***
+edad          0.07408    0.01475   5.021 0.00000051330 ***
+dpf1          0.94772    0.28436   3.333      0.000860 ***
+pred.2.logit -0.03576    0.07933  -0.451      0.652138    
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 428.40  on 331  degrees of freedom
+Residual deviance: 317.28  on 326  degrees of freedom
+AIC: 329.28
+
+Number of Fisher Scoring iterations: 6</code></pre>
+</div>
+</div>
+</section>
+<section id="curvas-ajustadas" class="level2">
+<h2 class="anchored" data-anchor-id="curvas-ajustadas">Curvas ajustadas</h2>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="codigo_tp_mlg_files/figure-html/unnamed-chunk-14-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="análisis-de-linealidad-en-la-edad" class="level2">
+<h2 class="anchored" data-anchor-id="análisis-de-linealidad-en-la-edad">Análisis de linealidad en la edad</h2>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>20% 40% 60% 80% 
+ 23  25  29  38 </code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = diabetes ~ glucosa + obesidad + dpf + presion + 
+    edad_2 + edad_3 + edad_4 + edad_5, family = binomial(link = "logit"), 
+    data = datos_train)
+
+Coefficients:
+            Estimate Std. Error z value Pr(&gt;|z|)    
+(Intercept)  -5.1272     0.6492  -7.898 2.83e-15 ***
+glucosa1      1.9719     0.4124   4.782 1.73e-06 ***
+obesidad1     1.3182     0.3589   3.673 0.000240 ***
+dpf1          1.0491     0.2868   3.658 0.000254 ***
+presion1      0.5076     0.3395   1.495 0.134868    
+edad_2        1.0651     0.5202   2.047 0.040614 *  
+edad_3        1.2084     0.4867   2.483 0.013045 *  
+edad_4        1.6494     0.4874   3.384 0.000714 ***
+edad_5        2.5325     0.4852   5.219 1.80e-07 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 428.40  on 331  degrees of freedom
+Residual deviance: 307.12  on 323  degrees of freedom
+AIC: 325.12
+
+Number of Fisher Scoring iterations: 5</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+Call:
+glm(formula = diabetes ~ glucosa + obesidad + dpf + presion + 
+    edad_ORDEN, family = binomial(link = "logit"), data = datos_train)
+
+Coefficients:
+            Estimate Std. Error z value     Pr(&gt;|z|)    
+(Intercept)  -5.4969     0.6519  -8.432      &lt; 2e-16 ***
+glucosa1      1.9229     0.4080   4.713 0.0000024363 ***
+obesidad1     1.3270     0.3493   3.799     0.000145 ***
+dpf1          1.0507     0.2855   3.680     0.000233 ***
+presion1      0.4791     0.3323   1.441     0.149451    
+edad_ORDEN    0.5649     0.1043   5.416 0.0000000609 ***
+---
+Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+(Dispersion parameter for binomial family taken to be 1)
+
+    Null deviance: 428.40  on 331  degrees of freedom
+Residual deviance: 308.96  on 326  degrees of freedom
+AIC: 320.96
+
+Number of Fisher Scoring iterations: 5</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Analysis of Deviance Table
+
+Model 1: diabetes ~ glucosa + obesidad + dpf + presion + edad_ORDEN
+Model 2: diabetes ~ glucosa + obesidad + dpf + presion + edad_2 + edad_3 + 
+    edad_4 + edad_5
+  Resid. Df Resid. Dev Df Deviance Pr(&gt;Chi)
+1       326     308.96                     
+2       323     307.12  3   1.8439   0.6054</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="análisis-de-residuos" class="level1">
+<h1>Análisis de residuos</h1>
+<section id="evaluación-de-la-componente-sistemática" class="level2">
+<h2 class="anchored" data-anchor-id="evaluación-de-la-componente-sistemática">Evaluación de la componente sistemática</h2>
+<p>Observe como se ve el gráfico de los residuos vs.&nbsp;las medias estimadas bajo el enlace logit:</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="codigo_tp_mlg_files/figure-html/unnamed-chunk-16-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="evaluación-de-la-componente-aleatoria" class="level2">
+<h2 class="anchored" data-anchor-id="evaluación-de-la-componente-aleatoria">Evaluación de la componente aleatoria</h2>
+<p>Mediante un gráfico QQ puede evaluarse si la distribución supuesta es adecuada.</p>
+<div class="cell">
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="codigo_tp_mlg_files/figure-html/unnamed-chunk-17-1.png" class="img-fluid figure-img" width="1021"></p>
+</figure>
+</div>
+</div>
+</div>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const onCopySuccess = function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  }
+  const getTextToCopy = function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+    text: getTextToCopy
+  });
+  clipboard.on('success', onCopySuccess);
+  if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+    const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+      text: getTextToCopy,
+      container: window.document.getElementById('quarto-embedded-source-code-modal')
+    });
+    clipboardModal.on('success', onCopySuccess);
+  }
+    var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+    var mailtoRegex = new RegExp(/^mailto:/);
+      var filterRegex = new RegExp('/' + window.location.host + '/');
+    var isInternal = (href) => {
+        return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+    }
+    // Inspect non-navigation links and adorn them if external
+ 	var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+    for (var i=0; i<links.length; i++) {
+      const link = links[i];
+      if (!isInternal(link.href)) {
+        // undo the damage that might have been done by quarto-nav.js in the case of
+        // links that we want to consider external
+        if (link.dataset.originalHref !== undefined) {
+          link.href = link.dataset.originalHref;
+        }
+      }
+    }
+  function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+    const config = {
+      allowHTML: true,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start',
+    };
+    if (contentFn) {
+      config.content = contentFn;
+    }
+    if (onTriggerFn) {
+      config.onTrigger = onTriggerFn;
+    }
+    if (onUntriggerFn) {
+      config.onUntrigger = onUntriggerFn;
+    }
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      if (note) {
+        return note.innerHTML;
+      } else {
+        return "";
+      }
+    });
+  }
+  const xrefs = window.document.querySelectorAll('a.quarto-xref');
+  const processXRef = (id, note) => {
+    // Strip column container classes
+    const stripColumnClz = (el) => {
+      el.classList.remove("page-full", "page-columns");
+      if (el.children) {
+        for (const child of el.children) {
+          stripColumnClz(child);
+        }
+      }
+    }
+    stripColumnClz(note)
+    if (id === null || id.startsWith('sec-')) {
+      // Special case sections, only their first couple elements
+      const container = document.createElement("div");
+      if (note.children && note.children.length > 2) {
+        container.appendChild(note.children[0].cloneNode(true));
+        for (let i = 1; i < note.children.length; i++) {
+          const child = note.children[i];
+          if (child.tagName === "P" && child.innerText === "") {
+            continue;
+          } else {
+            container.appendChild(child.cloneNode(true));
+            break;
+          }
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(container);
+        }
+        return container.innerHTML
+      } else {
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        return note.innerHTML;
+      }
+    } else {
+      // Remove any anchor links if they are present
+      const anchorLink = note.querySelector('a.anchorjs-link');
+      if (anchorLink) {
+        anchorLink.remove();
+      }
+      if (window.Quarto?.typesetMath) {
+        window.Quarto.typesetMath(note);
+      }
+      if (note.classList.contains("callout")) {
+        return note.outerHTML;
+      } else {
+        return note.innerHTML;
+      }
+    }
+  }
+  for (var i=0; i<xrefs.length; i++) {
+    const xref = xrefs[i];
+    tippyHover(xref, undefined, function(instance) {
+      instance.disable();
+      let url = xref.getAttribute('href');
+      let hash = undefined; 
+      if (url.startsWith('#')) {
+        hash = url;
+      } else {
+        try { hash = new URL(url).hash; } catch {}
+      }
+      if (hash) {
+        const id = hash.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note !== null) {
+          try {
+            const html = processXRef(id, note.cloneNode(true));
+            instance.setContent(html);
+          } finally {
+            instance.enable();
+            instance.show();
+          }
+        } else {
+          // See if we can fetch this
+          fetch(url.split('#')[0])
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.getElementById(id);
+            if (note !== null) {
+              const html = processXRef(id, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      } else {
+        // See if we can fetch a full url (with no hash to target)
+        // This is a special case and we should probably do some content thinning / targeting
+        fetch(url)
+        .then(res => res.text())
+        .then(html => {
+          const parser = new DOMParser();
+          const htmlDoc = parser.parseFromString(html, "text/html");
+          const note = htmlDoc.querySelector('main.content');
+          if (note !== null) {
+            // This should only happen for chapter cross references
+            // (since there is no id in the URL)
+            // remove the first header
+            if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+              note.children[0].remove();
+            }
+            const html = processXRef(null, note);
+            instance.setContent(html);
+          } 
+        }).finally(() => {
+          instance.enable();
+          instance.show();
+        });
+      }
+    }, function(instance) {
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            div.style.left = 0;
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+        // Handle positioning of the toggle
+    window.addEventListener(
+      "resize",
+      throttle(() => {
+        elRect = undefined;
+        if (selectedAnnoteEl) {
+          selectCodeLines(selectedAnnoteEl);
+        }
+      }, 10)
+    );
+    function throttle(fn, ms) {
+    let throttle = false;
+    let timer;
+      return (...args) => {
+        if(!throttle) { // first call gets through
+            fn.apply(this, args);
+            throttle = true;
+        } else { // all the others get throttled
+            if(timer) clearTimeout(timer); // cancel #2
+            timer = setTimeout(() => {
+              fn.apply(this, args);
+              timer = throttle = false;
+            }, ms);
+        }
+      };
+    }
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>

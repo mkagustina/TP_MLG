@@ -1,6 +1,9 @@
 ---
 title: "TP - MLG"
 format: html
+execute: 
+  echo: false
+  warning: false
 ---
 
 ```{r}
@@ -8,8 +11,15 @@ library(readr)
 library(tidyverse)
 library(skimr)
 library(MASS)
-diabetes <- read_csv("C:/Users/frano/OneDrive/FACULTAD/4º AÑO/MODELOS LINEALES GENERALIZADOS/diabetes.csv")
+library(statmod)
+library(kableExtra)
+library(pROC)
+library(caret)
+options(scipen = 8)
+diabetes <- read_csv("diabetes.csv")
+```
 
+```{r}
 datos_crudo <- diabetes %>% rename(
     glucosa = "Glucose",
     presion = "BloodPressure",
@@ -21,6 +31,7 @@ datos_crudo <- diabetes %>% rename(
     diabetes = "outcome"
     ) %>%
   filter(
+    edad < 80, 
     presion > 0,
     insulina > 0,
     glucosa > 0, 
@@ -33,9 +44,8 @@ datos_crudo <- diabetes %>% rename(
       T ~ "2"
       )),
     obesidad = factor(case_when(
-      imc < 25 ~ "0",
-      imc < 30 ~ "1",
-      T ~ "2"
+      imc < 30 ~ "0",
+      T ~ "1"
       )),
     glucosa = factor(case_when(
       glucosa > 100 ~ "1",
@@ -52,7 +62,12 @@ datos_crudo <- diabetes %>% rename(
     )
 
 datos <-  datos_crudo %>% 
-  select(edad, glucosa, presion, dpf, embarazo, obesidad, diabetes)
+  dplyr::select(edad, glucosa, presion, dpf, embarazo, obesidad, diabetes)
+
+set.seed(8)
+datos_train <- datos %>% slice_sample(prop = 0.85)
+datos_val <- datos %>% 
+  filter(!row_number() %in% as.numeric(rownames(datos_train)))
 ```
 
 
@@ -68,7 +83,7 @@ tabla_respuesta <- datos %>%
     Categoria = ifelse(diabetes == 1, "Sí", "No"),
     Porcentaje = round(100 * n / sum(n), 1)
   ) %>%
-  select(Categoria, Frecuencia = n, Porcentaje)
+  dplyr::select(Categoria, Frecuencia = n, Porcentaje)
 
 # Agregar fila de totales
 tabla_respuesta <- tabla_respuesta %>%
@@ -118,7 +133,7 @@ skim(datos)
 ```{r}
 # tablas cruzadas
 datos %>%
-  count(obesidad, diabetes) %>%
+  count(obesidad, presion, diabetes) %>%
   group_by(obesidad) %>%
   mutate(prop = n / sum(n))
 
@@ -175,92 +190,143 @@ ggplot(datos, aes(x = factor(diabetes), y = edad, fill = factor(diabetes))) +
 
 ```{r}
 # Modelo nulo
-modelo0 <- glm(diabetes ~ 1, data = datos, family = binomial(link = "logit"))
-
-# Modelo completo (con interacciones de primer orden)
-modelo_full <- glm(diabetes ~ (edad  + glucosa + presion + dpf + embarazo)^2,
-                   data = datos, family = binomial(link = "logit"))
-
+modelo0 <- glm(diabetes ~ 1, data = datos_train, family = binomial(link = "logit"))
+modelo_full <- glm(diabetes ~ edad + glucosa + presion + dpf + embarazo + obesidad, data = datos_train, family = binomial(link = 'logit'))
 # Selección hacia adelante
 modelo_forward <- step(modelo0,
-                       scope = list(lower = ~1, 
-                                    upper = ~(edad + glucosa + presion + dpf + embarazo)^2),
-                       direction = "both",
+                       scope = list(lower = ~ 1, 
+                                    upper = ~ edad + glucosa + presion + dpf + embarazo + obesidad),
+                       direction = "forward",
+                       trace = TRUE,
+                       k = 2)
+
+# Selección hacia adelante
+modelo_backward <- step(modelo_full,
+                       scope = list(lower = ~ 1, 
+                                    upper = ~ edad + glucosa + presion + dpf + embarazo + obesidad),
+                       direction = "backward",
                        trace = TRUE,k = 2)
+summary(modelo_backward)
+modelo <- modelo_backward
 ```
 
 ```{r}
-modelo <- glm(
-  diabetes ~ glucosa + edad + obesidad + dpf + presion + dpf:presion + obesidad:dpf,
-  data = datos,
-  family = binomial(link = 'logit')
-              )
-summary(modelo)
-pchisq(modelo$deviance, modelo$df.residual, ncp = 0, lower.tail = FALSE,log.p=FALSE)
+datos_train %>%
+  count(obesidad, glucosa, diabetes) %>%
+  group_by(obesidad) %>%
+  mutate(prop = n / sum(n))
+```
 
+```{r}
+datos_train %>%
+  count(obesidad, dpf, diabetes) %>%
+  group_by(obesidad) %>%
+  mutate(prop = n / sum(n))
+```
+
+```{r}
+datos_train %>%
+  count(dpf, glucosa, diabetes) %>%
+  group_by(dpf) %>%
+  mutate(prop = n / sum(n))
+```
+
+```{r}
+modelo_int <- step(modelo,
+                   scope = list(lower = ~ 1, 
+                   upper = ~ (edad + glucosa  + dpf  + obesidad)^2,
+                       direction = "forward",
+                       trace = TRUE,
+                       k = 2))
+```
+
+## Bondad de ajuste
+
+```{r}
+pchisq(modelo$deviance, modelo$df.residual, ncp = 0, lower.tail = FALSE,log.p=FALSE)
+```
+
+## Verificación el enlace elegido
+
+```{r}
 probs <- fitted(modelo)
 # Working responses
 z <- resid(modelo, type = "working") + modelo$linear.predictor
 
 # Gráfico de working responses vs. predictor lineal
-ggplot(datos, aes(y = modelo$linear.predictor, x = z)) + 
+ggplot(datos_train, aes(y = modelo$linear.predictor, x = z)) + 
   geom_point(fill = "orange", shape = 21, size = 3) +
   labs(title = "Working responses vs. predictor lineal", x = "Z" , y = expression(eta)) +
   geom_abline(intercept = 0, slope = 1) +
   theme_minimal()
 
-pred.logit<-predict(modelo)
-datos$pred.2.logit<-pred.logit*pred.logit
-modelo_logit.2 <- glm(diabetes ~ glucosa + obesidad + edad + dpf + glucosa:dpf + pred.2.logit, 
+pred.logit <- predict(modelo)
+datos_train$pred.2.logit <- pred.logit*pred.logit
+modelo_logit.2 <- glm(diabetes ~ glucosa + obesidad + edad + dpf + pred.2.logit, 
                         family=binomial(link="logit"), 
-                        data=datos)
+                        data=datos_train)
 anova(modelo, modelo_logit.2, test = 'LRT')
 summary(modelo_logit.2)
-
-library(ggplot2)
-library(dplyr)
-
-
-# Calcular probabilidades predichas
-datos$prob <- predict(modelo, datos, type = "response")
-
-# Graficar
-ggplot(datos, aes(x = edad, y = prob, color = obesidad)) +
-  geom_line(size = 1.1) +
-  labs(
-    x = "Glucosa",
-    y = "Probabilidad predicha de diabetes",
-    title = "Probabilidad de diabetes según glucosa y DPF"
-  ) +
-  lims(y = c(0,1)) +
-  theme_minimal(base_size = 13)
-
 ```
 
+## Curvas ajustadas
+
 ```{r}
-quantile(datos$edad, probs = c(0.33,0.66))
-datos <- datos %>%
+# Calcular probabilidades predichas
+datos_train$prob <- predict(modelo, datos_train, type = "response")
+# Crear grid de edades (por ejemplo de 20 a 80)
+nuevo <- data.frame(
+  edad = seq(min(datos_train$edad), max(datos_train$edad), by = 1),
+  dpf = factor(1, levels = levels(datos_train$dpf)),
+  obesidad = factor(1, levels = levels(datos_train$obesidad)),
+  glucosa = factor(1, levels = levels(datos_train$glucosa))
+)
+
+# Calcular probabilidades predichas manteniendo los demás factores en 0
+nuevo$prob <- predict(modelo, newdata = nuevo, type = "response")
+
+# Graficar
+ggplot(nuevo, aes(x = edad, y = prob)) +
+  geom_line(size = 1.1, color = "#0072B2") +
+  labs(
+    x = "Edad",
+    y = "Probabilidad predicha de diabetes",
+    title = "Probabilidad de diabetes según edad (dpf, obesidad y glucosa en 0)"
+  ) +
+  lims(y = c(0, 1)) +
+  theme_minimal(base_size = 13)
+```
+
+## Análisis de linealidad en la edad
+
+```{r}
+quantile(datos_train$edad, probs = c(0.2,0.4,0.6,0.8))
+datos_train <- datos_train %>%
   mutate(
     # Variable ordinal
     edad_ORDEN = case_when(
-      edad < 24 ~ 1,
-      edad >= 24 & edad <= 31 ~ 2,
-      edad > 31 ~ 3
+      edad <= 23 ~ 1,
+      edad <= 25 ~ 2,
+      edad <= 29 ~ 3,
+      edad <= 38 ~ 4,
+      T ~ 5
     ),
     
     # Variables dummies
-    edad_2 = if_else(edad >= 24 & edad <= 31, 1, 0),
-    edad_3 = if_else(edad > 31, 1, 0)
+    edad_2 = if_else(edad > 23 & edad <= 25, 1, 0),
+    edad_3 = if_else(edad > 25 & edad <= 29, 1, 0),
+    edad_4 = if_else(edad > 29 & edad <= 38, 1, 0),
+    edad_5 = if_else(edad > 38, 1, 0),
   )
 
 # Modelo con variables dummies de edad
-mod_dummies <- glm(diabetes ~ glucosa + obesidad + dpf + presion + dpf:presion + obesidad:dpf + edad_2 + edad_3,
-                     family = binomial(link = 'logit'), data = datos)
+mod_dummies <- glm(diabetes ~ glucosa + obesidad + dpf + presion + edad_2 + edad_3 + edad_4 + edad_5,
+                     family = binomial(link = 'logit'), data = datos_train)
 summary(mod_dummies)
 
 # Modelo con variable ordinal de edad
-mod_orden <- glm(diabetes ~ glucosa + obesidad + dpf + presion + dpf:presion + obesidad:dpf + edad_ORDEN,
-                     family = binomial(link = 'logit'), data = datos)
+mod_orden <- glm(diabetes ~ glucosa + obesidad + dpf + presion + edad_ORDEN,
+                     family = binomial(link = 'logit'), data = datos_train)
 summary(mod_orden)
 
 # Comparación de modelos
@@ -268,5 +334,54 @@ anova(mod_orden, mod_dummies)
 # Hay linealidad en la edad
 ```
 
+# Análisis de residuos
 
+## Evaluación de la componente sistemática
+Observe como se ve el gráfico de los residuos vs. las medias estimadas bajo el enlace logit:
+```{r}
+# Residuos cuantil
+rQ <- qresid(modelo)
+
+# Mu estimado
+
+### Gráfico de residuos cuantil vs. probabilidades estimadas (ajuste cloglog)
+ggplot(datos_train, aes(y = rQ, x = fitted(modelo))) + 
+  geom_point(fill = "orange", shape = 21, size = 3) +
+  geom_hline(yintercept = 0) + ylim(-3, 3) + 
+  geom_hline(yintercept = -3, linetype = "dashed") + 
+  geom_hline(yintercept =  3, linetype = "dashed") +
+  labs(title = "Gráfico de residuos cuantil vs. las probabilidades estimadas", x = expression(hat(pi)), y = "Residuos cuantil") +
+  theme_minimal()
+```
+
+## Evaluación de la componente aleatoria
+
+Mediante un gráfico QQ puede evaluarse si la distribución supuesta es adecuada.
+
+```{r, fig.width = 4*1.33*2}
+ggplot(datos_train, aes(sample = rQ)) +
+  stat_qq(distribution = qnorm, fill = "orange", shape = 21, size = 3) +
+  stat_qq_line() +
+  labs(title = "Gráfico probabilístico normal con residuos deviance est.",  x = "Cuantiles teóricos", y = "Cuantiles de los residuos dev. est.") +
+  theme_minimal()
+```
+
+```{r}
+
+# 1️⃣ Predecir probabilidades sobre el conjunto de validación
+datos_train$prob <- predict(modelo, newdata = datos_train, type = "response")
+
+roc_train <- roc(datos_train$diabetes, datos_train$prob)
+plot(roc_train, col = "#2E86C1", lwd = 2, main = "Curva ROC (datos de validación)")
+best_cut <- coords(roc_train, "best", ret = "threshold", best.method = "youden")
+best_cut
+
+datos_val$prob <- predict(modelo, newdata = datos_val, type = "response")
+datos_val$pred <- ifelse(datos_val$prob > best_cut[1,1], 1, 0)
+confusionMatrix(
+  factor(datos_val$pred),
+  factor(datos_val$diabetes),
+  positive = "1"
+)
+```
 

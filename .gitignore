@@ -1,4 +1,31 @@
-.Rproj.user
+# Archivos temporales y auxiliares de Quarto
+*_files/
+*_cache/
+*.log
+*.aux
+*.toc
+*.out
+*.bbl
+*.blg
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.run.xml
+
+
+# Archivos de sistema comunes
+.DS_Store
+Thumbs.db
+
+# Archivos de R
 .Rhistory
 .RData
-.Ruserdata
+.Rproj.user
+
+# Carpeta de resultados de Quarto
+_site/
+.quarto/
+
+# Archivos de configuración locales
+*.knit.md
+*.utf8.md
