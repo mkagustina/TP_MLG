@@ -124,6 +124,12 @@ datos_val <- datos %>%
 
 ## Introducción
 
+La diabetes es una enfermedad metabólica crónica caracterizada por niveles elevados de glucosa en sangre, consecuencia de una producción insuficiente de insulina o de una resistencia del organismo a su acción. Esta condición puede derivar en complicaciones cardiovasculares, renales, neurológicas y visuales, afectando de manera significativa la calidad de vida de quienes la padecen.
+
+El presente trabajo tiene como objetivo analizar los factores asociados a la presencia de diabetes en mujeres mayores de 21 años, a través de un modelo lineal generalizado con respuesta binaria. La variable respuesta analizada toma el valor 1 si la persona presenta diagnóstico de diabetes y 0 en caso contrario, por lo que se asume una distribución Bernoulli para cada observación.
+
+Dada la relevancia de esta enfermedad en términos de salud pública y su estrecha relación con factores fisiológicos y de estilo de vida, resulta fundamental comprender qué características individuales se asocian a un mayor riesgo de padecerla.
+
 ## Análisis descriptivo
 
 ```{r}
@@ -151,21 +157,6 @@ tabla_respuesta %>%
     latex_options = c("hold_position", "caption_position_bottom"),
     full_width = FALSE
   )
-```
-
-```{r, fig.cap='Distribución de diabetes', fig.height=4, fig.width=4}
-# Gráfico para var respuesta
-ggplot(datos, aes(x = factor(diabetes, labels = c("No", "Sí")))) +
-  geom_bar(fill = "aquamarine3", width = 0.7) +  
-  labs(
-    x = "Diabetes",
-    y = "Cantidad de mujeres",
-  ) +
-  theme_minimal(base_size = 14) +
-  theme(
-    axis.text.x = element_text(size = 12),
-    axis.title.x = element_text(size = 14)
-  ) 
 ```
 
 ```{r, eval=FALSE}
