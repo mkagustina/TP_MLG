@@ -1,0 +1,678 @@
+---
+fontsize: 11pt 
+output: 
+  pdf_document: 
+    latex_engine: xelatex
+    keep_tex: true
+    toc: false
+    fig_caption: true  
+geometry: "left=3cm,right=3cm,top=3cm,bottom=3cm"
+#titlepage: true 
+lang: es-ES  
+editor_options: 
+  chunk_output_type: console
+header-includes:
+  - \usepackage{caption}
+  - \captionsetup[table]{position=bottom,labelformat=default,labelsep=colon,name=Tabla}
+  - \captionsetup[figure]{labelformat=default,labelsep=colon,name=Figura}
+include-in-header:
+            - text: |
+                \usepackage{float}
+                \floatplacement{figure}{H} 
+---
+
+\begin{titlepage}
+    \centering
+    % Logo
+    \includegraphics[width=0.7\textwidth]{logo_facultad.png}\par
+    % Espacio entre logo y título principal
+    \vspace{3cm}
+    % Título principal
+    {\scshape\Huge Trabajo Práctico de Modelos Lineales Generalizados \par}
+    \vfill
+    % Carrera y Alumnos
+    {\Large Integrantes: \\[0.15cm]
+     Candela, Ornella \\[0.15cm]
+     Mac Kay, Agustina \\[0.15cm]
+     Ovando, Francisco \par}
+    \vspace{1cm}
+    {\Large Licenciatura en Estadística \par}
+    % Fecha abajo del todo
+    \vspace{0.15cm}
+    {\large Año 2025 \par}
+\end{titlepage}
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.align="center", echo = FALSE, 
+                      warning = FALSE, message = FALSE)
+```
+
+```{r}
+# Carga de librerías
+library(readr)
+library(tidyverse)
+library(skimr)
+library(MASS)
+library(statmod)
+library(kableExtra)
+library(pROC)
+library(caret)
+options(scipen = 8) # Desactiva notación científica
+```
+
+```{r}
+# Carga de datos
+diabetes <- read_csv("diabetes.csv")
+```
+
+```{r}
+# Modificacion de la base
+datos_crudo <- diabetes %>% 
+  rename(
+    glucosa = "Glucose",
+    presion = "BloodPressure",
+    piel = "SkinThickness",
+    insulina = "Insulin",
+    imc = "BMI",
+    dpf = "DiabetesPedigreeFunction",
+    edad = "Age",
+    diabetes = "outcome"
+    ) %>%
+  filter(
+    edad < 80, 
+    presion > 0,
+    insulina > 0,
+    glucosa > 0, 
+    imc > 0
+    )%>%
+  mutate(
+    embarazo = factor(case_when(
+      Pregnancies == 0 ~ "0",
+      Pregnancies <= 3 ~ "1",
+      T ~ "2")),
+    obesidad = factor(case_when(
+      imc < 30 ~ "0",
+      T ~ "1")),
+    glucosa = factor(case_when(
+      glucosa > 100 ~ "1",
+      T ~ "0")),
+    presion = factor(case_when(
+      presion > 80 ~ "1",
+      T ~ "0")),
+    dpf = factor(case_when(
+      dpf > 0.5 ~ "1",
+      T ~ "0"))
+    )
+
+datos <-  datos_crudo %>% 
+  dplyr::select(edad, glucosa, presion, dpf, embarazo, obesidad,
+                diabetes)
+```
+
+```{r}
+# Separación del dataset en training y validation sets
+set.seed(8)
+
+# Training set
+datos_train <- datos %>% slice_sample(prop = 0.85)
+
+# Validation set
+datos_val <- datos %>% 
+  filter(!row_number() %in% as.numeric(rownames(datos_train)))
+```
+
+## Introducción
+
+## Análisis descriptivo
+
+```{r}
+# Frecuencias absolutas y relativas de DIABETES
+tabla_respuesta <- datos %>%
+  count(diabetes) %>%
+  mutate(
+    Categoria = ifelse(diabetes == 1, "Sí", "No"),
+    Porcentaje = round(100 * n / sum(n), 1)
+  ) %>%
+  dplyr::select(Categoria, Frecuencia = n, Porcentaje) %>%
+  # Agregar fila de totales
+  rbind(c("Total", sum(.$Frecuencia), 100))
+
+# Mostrar tabla 
+tabla_respuesta %>%
+  kable(
+    caption = "Frecuencias absolutas y relativas de diabetes",
+    col.names = c("Diabetes", "Frecuencia", "Porcentaje (%)"),
+    align = "c",
+    format = "latex",     
+    booktabs = TRUE       
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "caption_position_bottom"),
+    full_width = FALSE
+  )
+```
+
+```{r, fig.cap='Distribución de diabetes', fig.height=4, fig.width=4}
+# Gráfico para var respuesta
+ggplot(datos, aes(x = factor(diabetes, labels = c("No", "Sí")))) +
+  geom_bar(fill = "aquamarine3", width = 0.7) +  
+  labs(
+    x = "Diabetes",
+    y = "Cantidad de mujeres",
+  ) +
+  theme_minimal(base_size = 14) +
+  theme(
+    axis.text.x = element_text(size = 12),
+    axis.title.x = element_text(size = 14)
+  ) 
+```
+
+```{r, eval=FALSE}
+# resumen general de variables
+skim(datos)
+```
+
+```{r}
+# Analisis variables explicativas categoricas
+
+# Frecuencias absolutas y relativas de OBESIDAD
+tabla_obesidad <- datos %>%
+  count(obesidad) %>%
+  mutate(
+    Categoria = case_when(
+      obesidad == 0 ~ "Peso Normal o sobrepeso",
+      obesidad == 1 ~ "Obesidad",
+    ),
+    Porcentaje = round(100 * n / sum(n), 1)
+  ) %>%
+  dplyr::select(Categoria, Frecuencia = n, Porcentaje) %>% 
+  # Agregar fila de totales
+  rbind(c("Total", sum(.$Frecuencia), 100))
+
+# Mostrar tabla 
+tabla_obesidad %>%
+  kable(
+    caption = "Frecuencias absolutas y relativas de obesidad",
+    col.names = c("Obesidad", "Frecuencia", "Porcentaje (%)"),
+    align = "c",
+    format = "latex",    
+    booktabs = TRUE       
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "caption_position_bottom"),
+    full_width = FALSE
+  )
+```
+
+
+```{r}
+# Frecuencias absolutas y relativas de GLUCOSA
+tabla_glucosa <- datos %>%
+  count(glucosa) %>%
+  mutate(
+    Categoria = ifelse(glucosa == 1, "Elevada", "Normal"),
+    Porcentaje = round(100 * n / sum(n), 1)
+  ) %>%
+  dplyr::select(Categoria, Frecuencia = n, Porcentaje) %>% 
+  # Agregar fila de totales
+  rbind(c("Total", sum(.$Frecuencia), 100))
+
+# Mostrar tabla 
+tabla_glucosa %>%
+  kable(
+    caption = "Frecuencias absolutas y relativas de glucosa",
+    col.names = c("Glucosa", "Frecuencia", "Porcentaje (%)"),
+    align = "c",
+    format = "latex",     
+    booktabs = TRUE       
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "caption_position_bottom"),
+    full_width = FALSE
+  )
+```
+
+
+```{r}
+# Frecuencias absolutas y relativas de PRESION
+tabla_presion <- datos %>%
+  count(presion) %>%
+  mutate(
+    Categoria = ifelse(presion == 1, "Elevada", "Normal"),
+    Porcentaje = round(100 * n / sum(n), 1)
+  ) %>%
+  dplyr::select(Categoria, Frecuencia = n, Porcentaje) %>% 
+  # Agregar fila de totales
+  rbind(c("Total", sum(.$Frecuencia), 100))
+
+# Mostrar tabla 
+tabla_presion %>%
+  kable(
+    caption = "Frecuencias absolutas y relativas de presión",
+    col.names = c("Presión", "Frecuencia", "Porcentaje (%)"),
+    align = "c",
+    format = "latex",     
+    booktabs = TRUE       
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "caption_position_bottom"),
+    full_width = FALSE
+  )
+```
+
+
+```{r}
+# Frecuencias absolutas y relativas de DPF
+tabla_dpf <- datos %>%
+  count(dpf) %>%
+  mutate(
+    Categoria = ifelse(dpf == 1, "Riesgo alto", "Riesgo bajo"),
+    Porcentaje = round(100 * n / sum(n), 1)
+  ) %>%
+  dplyr::select(Categoria, Frecuencia = n, Porcentaje) %>% 
+  # Agregar fila de totales
+  rbind(c("Total", sum(.$Frecuencia), 100))
+
+# Mostrar tabla 
+tabla_dpf %>%
+  kable(
+    caption = "Frecuencias absolutas y relativas de DPF",
+    col.names = c("DPF", "Frecuencia", "Porcentaje (%)"),
+    align = "c",
+    format = "latex",     
+    booktabs = TRUE       
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "caption_position_bottom"),
+    full_width = FALSE
+  )
+```
+
+
+```{r}
+# Frecuencias absolutas y relativas de EMBARAZO
+tabla_embarazo <- datos %>%
+  count(embarazo) %>%
+  mutate(
+    Categoria = case_when(
+      embarazo == 0 ~ "Ninguno",
+      embarazo == 1 ~ "1 a 3",
+      embarazo == 2 ~ "Más de 3",
+    ),
+    Porcentaje = round(100 * n / sum(n), 1)
+  ) %>%
+  dplyr::select(Categoria, Frecuencia = n, Porcentaje) %>% 
+  # Agregar fila de totales
+  rbind(c("Total", sum(.$Frecuencia), 100))
+
+# Mostrar tabla 
+tabla_embarazo %>%
+  kable(
+    caption = "Frecuencias absolutas y relativas de embarazo",
+    col.names = c("Embarazos", "Frecuencia", "Porcentaje (%)"),
+    align = "c",
+    format = "latex",    
+    booktabs = TRUE       
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "caption_position_bottom"),
+    full_width = FALSE
+  )
+```
+
+
+```{r}
+# Tabla descriptiva de edad
+tabla_edad <- datos %>%
+  summarise(
+    Media_edad = mean(edad),
+    Mediana_edad = median(edad),
+    DE_edad = sd(edad),
+    Min_edad = min(edad),
+    Max_edad = max(edad)
+  ) %>%
+  pivot_longer(everything()) %>%
+  separate(name, into = c("Estadístico", "Variable"), sep = "_") %>%
+  pivot_wider(names_from = Estadístico, values_from = value) %>%
+  mutate(
+    Variable = case_when(
+      Variable == "edad" ~ "Edad",
+      TRUE ~ Variable
+    )
+  ) %>%
+  dplyr::select(Variable, Media, Mediana, DE, Min, Max)
+
+# Mostrar tabla en formato LaTeX
+tabla_edad %>%
+  kable(
+    caption = "Estadísticas descriptivas de la variable edad",
+    col.names = c("Variable", "Media", "Mediana", "DE", "Mínimo", "Máximo"),
+    align = "c",
+    format = "latex",
+    booktabs = TRUE
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "caption_position_bottom"),
+    full_width = FALSE
+  )
+```
+
+\newpage
+
+```{r, fig.height=8}
+# Cruzamos las categóricas con la respuesta
+
+# OBESIDAD
+graf2 <- ggplot(datos, aes(x = obesidad, fill = factor(diabetes))) +
+  geom_bar(position = "fill", width = 0.7) +
+  scale_fill_manual(
+    values = c("aquamarine3", "pink3"),
+    name = "Diabetes",
+    labels = c("No", "Sí")
+  ) +
+  scale_x_discrete(
+    labels = c(`0` = "Peso Normal o sobrepeso", `1` = "Obesidad")
+  ) +
+  labs(
+    x = "Nivel de obesidad",
+    y = "Proporción",
+    caption = "Proporción de personas con diabetes según nivel de obesidad"
+  ) +
+  theme_minimal(base_size = 9)
+
+# PRESIÓN
+graf3 <- ggplot(datos, aes(x = presion, fill = factor(diabetes))) +
+  geom_bar(position = "fill", width = 0.7) +
+  scale_fill_manual(
+    values = c("aquamarine3", "pink3"),
+    name = "Diabetes",
+    labels = c("No", "Sí")
+  ) +
+  scale_x_discrete(
+    labels = c(`0` = "Normal", `1` = "Elevada")
+  ) +
+  labs(
+    x = "Presión",
+    y = "Proporción",
+    caption = "Proporción de personas con diabetes según presión"
+  ) +
+  theme_minimal(base_size = 9)
+
+# DPF
+graf4 <- ggplot(datos, aes(x = dpf, fill = factor(diabetes))) +
+  geom_bar(position = "fill", width = 0.7) +
+  scale_fill_manual(
+    values = c("aquamarine3", "pink3"),
+    name = "Diabetes",
+    labels = c("No", "Sí")
+  ) +
+  scale_x_discrete(
+    labels = c(`0` = "Riesgo bajo", `1` = "Riesgo alto")
+  ) +
+  labs(
+    x = "DPF",
+    y = "Proporción",
+    caption = "Proporción de personas con diabetes según DPF"
+  ) +
+  theme_minimal(base_size = 9)
+
+# GLUCOSA
+graf5 <- ggplot(datos, aes(x = glucosa, fill = factor(diabetes))) +
+  geom_bar(position = "fill", width = 0.7) +
+  scale_fill_manual(
+    values = c("aquamarine3", "pink3"),
+    name = "Diabetes",
+    labels = c("No", "Sí")
+  ) +
+  scale_x_discrete(
+    labels = c(`0` = "Normal", `1` = "Elevada")
+  ) +
+  labs(
+    x = "Nivel de glucosa",
+    y = "Proporción",
+    caption = "Proporción de personas con diabetes según nivel de glucosa"
+  ) +
+  theme_minimal(base_size = 9)
+
+# EMBARAZOS
+graf6 <- ggplot(datos, aes(x = embarazo, fill = factor(diabetes))) +
+  geom_bar(position = "fill", width = 0.7) +
+  scale_fill_manual(
+    values = c("aquamarine3", "pink3"),
+    name = "Diabetes",
+    labels = c("No", "Sí")
+  ) +
+  scale_x_discrete(
+    labels = c(`0` = "Ninguno", `1` = "1 a 3", `2` = "3 o más")
+  ) +
+  labs(
+    x = "Cantidad de embarazos",
+    y = "Proporción",
+    caption = "Proporción de personas con diabetes según cantidad de embarazos"
+  ) +
+  theme_minimal(base_size = 9)
+
+# EDAD
+graf7 <- ggplot(datos, aes(x = factor(diabetes, 
+                                      labels = c("No", "Sí")),
+                           y = edad,
+                           fill = factor(diabetes, 
+                                         labels = c("No", "Sí")))) +
+  geom_boxplot(alpha = 0.7) +
+  scale_fill_manual(values = c("No" = "aquamarine", "Sí" = "pink3")) +
+  labs(
+    x = "Diabetes",
+    y = "Edad",
+    caption = "Distribución de la edad según presencia de diabetes"
+  ) +
+  theme_minimal(base_size = 9) +
+  theme(legend.position = "none")  
+
+
+library(gridExtra)
+grid.arrange(graf2, graf3, graf4, graf5, graf6, graf7, 
+             ncol=2, nrow = 3)
+```
+
+
+## Selección del modelo
+
+```{r, results='hide'}
+# Modelo nulo
+modelo0 <- glm(diabetes ~ 1, data = datos_train, family = binomial(link = "logit"))
+modelo_full <- glm(diabetes ~ edad + glucosa + presion + dpf + embarazo + obesidad, data = datos_train, family = binomial(link = 'logit'))
+# Selección hacia adelante
+modelo_forward <- step(modelo0,
+                       scope = list(lower = ~ 1, 
+                                    upper = ~ edad + glucosa + presion + dpf + embarazo + obesidad),
+                       direction = "forward",
+                       trace = TRUE,
+                       k = 2)
+
+# Selección hacia adelante
+modelo_backward <- step(modelo_full,
+                       scope = list(lower = ~ 1, 
+                                    upper = ~ edad + glucosa + presion + dpf + embarazo + obesidad),
+                       direction = "backward",
+                       trace = TRUE,k = 2)
+summary(modelo_backward)
+modelo <- modelo_backward
+```
+
+```{r, results='hide'}
+datos_train %>%
+  count(obesidad, glucosa, diabetes) %>%
+  group_by(obesidad) %>%
+  mutate(prop = n / sum(n))
+
+datos_train %>%
+  count(obesidad, dpf, diabetes) %>%
+  group_by(obesidad) %>%
+  mutate(prop = n / sum(n))
+
+datos_train %>%
+  count(dpf, glucosa, diabetes) %>%
+  group_by(dpf) %>%
+  mutate(prop = n / sum(n))
+```
+
+```{r}
+modelo_int <- step(modelo,
+                   scope = list(lower = ~ 1, 
+                   upper = ~ (edad + glucosa  + dpf  + obesidad)^2,
+                       direction = "forward",
+                       trace = TRUE,
+                       k = 2))
+```
+
+### Bondad de ajuste
+
+```{r}
+pchisq(modelo$deviance, modelo$df.residual, ncp = 0, lower.tail = FALSE,log.p=FALSE)
+```
+
+## Verificación el enlace elegido
+
+```{r}
+probs <- fitted(modelo)
+# Working responses
+z <- resid(modelo, type = "working") + modelo$linear.predictor
+
+# Gráfico de working responses vs. predictor lineal
+ggplot(datos_train, aes(y = modelo$linear.predictor, x = z)) + 
+  geom_point(fill = "orange", shape = 21, size = 3) +
+  labs(title = "Working responses vs. predictor lineal", x = "Z" , y = expression(eta)) +
+  geom_abline(intercept = 0, slope = 1) +
+  theme_minimal()
+
+pred.logit <- predict(modelo)
+datos_train$pred.2.logit <- pred.logit*pred.logit
+modelo_logit.2 <- glm(diabetes ~ glucosa + obesidad + edad + dpf + pred.2.logit, 
+                        family=binomial(link="logit"), 
+                        data=datos_train)
+anova(modelo, modelo_logit.2, test = 'LRT')
+summary(modelo_logit.2)
+```
+
+## Curvas ajustadas
+
+```{r}
+# Calcular probabilidades predichas
+datos_train$prob <- predict(modelo, datos_train, type = "response")
+# Crear grid de edades (por ejemplo de 20 a 80)
+nuevo <- data.frame(
+  edad = seq(min(datos_train$edad), max(datos_train$edad), by = 1),
+  dpf = factor(1, levels = levels(datos_train$dpf)),
+  obesidad = factor(1, levels = levels(datos_train$obesidad)),
+  glucosa = factor(1, levels = levels(datos_train$glucosa))
+)
+
+# Calcular probabilidades predichas manteniendo los demás factores en 0
+nuevo$prob <- predict(modelo, newdata = nuevo, type = "response")
+
+# Graficar
+ggplot(nuevo, aes(x = edad, y = prob)) +
+  geom_line(size = 1.1, color = "#0072B2") +
+  labs(
+    x = "Edad",
+    y = "Probabilidad predicha de diabetes",
+    title = "Probabilidad de diabetes según edad (dpf, obesidad y glucosa en 0)"
+  ) +
+  lims(y = c(0, 1)) +
+  theme_minimal(base_size = 13)
+```
+
+## Análisis de linealidad en la edad
+
+```{r}
+quantile(datos_train$edad, probs = c(0.2,0.4,0.6,0.8))
+datos_train <- datos_train %>%
+  mutate(
+    # Variable ordinal
+    edad_ORDEN = case_when(
+      edad <= 23 ~ 1,
+      edad <= 25 ~ 2,
+      edad <= 29 ~ 3,
+      edad <= 38 ~ 4,
+      T ~ 5
+    ),
+    
+    # Variables dummies
+    edad_2 = if_else(edad > 23 & edad <= 25, 1, 0),
+    edad_3 = if_else(edad > 25 & edad <= 29, 1, 0),
+    edad_4 = if_else(edad > 29 & edad <= 38, 1, 0),
+    edad_5 = if_else(edad > 38, 1, 0),
+  )
+
+# Modelo con variables dummies de edad
+mod_dummies <- glm(diabetes ~ glucosa + obesidad + dpf + presion + edad_2 + edad_3 + edad_4 + edad_5,
+                     family = binomial(link = 'logit'), data = datos_train)
+summary(mod_dummies)
+
+# Modelo con variable ordinal de edad
+mod_orden <- glm(diabetes ~ glucosa + obesidad + dpf + presion + edad_ORDEN,
+                     family = binomial(link = 'logit'), data = datos_train)
+summary(mod_orden)
+
+# Comparación de modelos
+anova(mod_orden, mod_dummies)
+# Hay linealidad en la edad
+```
+
+## Análisis de residuos
+
+### Evaluación de la componente sistemática
+Observe como se ve el gráfico de los residuos vs. las medias estimadas bajo el enlace logit:
+```{r}
+# Residuos cuantil
+rQ <- qresid(modelo)
+
+# Mu estimado
+
+### Gráfico de residuos cuantil vs. probabilidades estimadas (ajuste cloglog)
+ggplot(datos_train, aes(y = rQ, x = fitted(modelo))) + 
+  geom_point(fill = "orange", shape = 21, size = 3) +
+  geom_hline(yintercept = 0) + ylim(-3, 3) + 
+  geom_hline(yintercept = -3, linetype = "dashed") + 
+  geom_hline(yintercept =  3, linetype = "dashed") +
+  labs(title = "Gráfico de residuos cuantil vs. las probabilidades estimadas", x = expression(hat(pi)), y = "Residuos cuantil") +
+  theme_minimal()
+```
+
+### Evaluación de la componente aleatoria
+
+Mediante un gráfico QQ puede evaluarse si la distribución supuesta es adecuada.
+
+```{r, fig.width = 4*1.33*2}
+ggplot(datos_train, aes(sample = rQ)) +
+  stat_qq(distribution = qnorm, fill = "orange", shape = 21, size = 3) +
+  stat_qq_line() +
+  labs(title = "Gráfico probabilístico normal con residuos deviance est.",  x = "Cuantiles teóricos", y = "Cuantiles de los residuos dev. est.") +
+  theme_minimal()
+```
+
+## Capacidad predictiva del modelo
+
+```{r}
+
+# 1️⃣ Predecir probabilidades sobre el conjunto de validación
+datos_train$prob <- predict(modelo, newdata = datos_train, type = "response")
+
+roc_train <- roc(datos_train$diabetes, datos_train$prob)
+plot(roc_train, col = "#2E86C1", lwd = 2, main = "Curva ROC (datos de validación)")
+best_cut <- coords(roc_train, "best", ret = "threshold", best.method = "youden")
+best_cut
+
+datos_val$prob <- predict(modelo, newdata = datos_val, type = "response")
+datos_val$pred <- ifelse(datos_val$prob > best_cut[1,1], 1, 0)
+confusionMatrix(
+  factor(datos_val$pred),
+  factor(datos_val$diabetes),
+  positive = "1"
+)
+```
+
+## Resultados
+
+## Conclusión
