@@ -126,11 +126,52 @@ datos_val <- datos %>%
 
 La diabetes es una enfermedad metabólica crónica caracterizada por niveles elevados de glucosa en sangre, consecuencia de una producción insuficiente de insulina o de una resistencia del organismo a su acción. Esta condición puede derivar en complicaciones cardiovasculares, renales, neurológicas y visuales, afectando de manera significativa la calidad de vida de quienes la padecen.
 
-El presente trabajo tiene como objetivo analizar los factores asociados a la presencia de diabetes en mujeres mayores de 21 años, a través de un modelo lineal generalizado con respuesta binaria. La variable respuesta analizada toma el valor 1 si la persona presenta diagnóstico de diabetes y 0 en caso contrario, por lo que se asume una distribución Bernoulli para cada observación.
-
 Dada la relevancia de esta enfermedad en términos de salud pública y su estrecha relación con factores fisiológicos y de estilo de vida, resulta fundamental comprender qué características individuales se asocian a un mayor riesgo de padecerla.
 
+## Material y métodos
+
+El presente trabajo tiene como objetivo analizar los factores asociados a la presencia de diabetes en mujeres mayores de 21 años, a través de un modelo lineal generalizado con respuesta binaria. La variable respuesta analizada toma el valor 1 si la persona presenta diagnóstico de diabetes y 0 en caso contrario, por lo que se asume una distribución Bernoulli para cada observación.
+
+Las variables explicativas incluidas en el análisis se describen a continuación:
+
+\begin{itemize}
+  \item Edad: medida en años. Es una variable cuantitativa continua que permite evaluar el efecto del envejecimiento sobre la probabilidad de desarrollar diabetes.
+
+  \item Embarazo: número de veces que la mujer ha estado embarazada, categorizada en tres niveles:
+  \begin{itemize}
+    \item “0”: ninguna gestación
+    \item “1”: entre una y tres gestaciones
+    \item “2”: más de tres gestaciones
+  \end{itemize}
+
+  \item Glucosa: concentración de glucosa en ayunas. Fue categorizada en dos niveles:
+  \begin{itemize}
+    \item “0”: valores normales (≤ 100 mg/dL)
+    \item “1”: valores elevados (> 100 mg/dL)
+  \end{itemize}
+
+  \item Presión arterial: presión diastólica medida en mmHg, clasificada en dos niveles:
+  \begin{itemize}
+    \item “0”: presión dentro del rango normal (≤ 80 mmHg)
+    \item “1”: presión elevada (> 80 mmHg)
+  \end{itemize}
+
+  \item Obesidad:medida a través del índice de masa corporal (IMC). Se definió con dos niveles:
+  \begin{itemize}
+    \item “0”: IMC menor a 30
+    \item “1”: IMC igual o superior a 30
+  \end{itemize}
+
+  \item DPF (Diabetes Pedigree Function):índice que cuantifica la predisposición genética a la diabetes a partir del historial familiar. Fue dicotomizado en:
+  \begin{itemize}
+    \item “0”: valores bajos (≤ 0.5)
+    \item “1”: valores altos (> 0.5)
+  \end{itemize}
+\end{itemize}
+
 ## Análisis descriptivo
+
+A continuación se presenta una visión general de las características clave de la población estudiada.
 
 ```{r}
 # Frecuencias absolutas y relativas de DIABETES
@@ -351,6 +392,10 @@ tabla_edad %>%
 
 \newpage
 
+Los datos muestran que un 33.2% de la población estudiada tiene diabetes, con una alta prevalencia de obesidad (67%) y niveles elevados de glucosa (70.3%). Además, el 43% de los participantes tiene antecedentes familiares de diabetes, lo que podría indicar una predisposición genética relevante. Aunque la mayoría presenta presión arterial normal (80.1%), los factores como la obesidad, los niveles de glucosa y el historial familiar podrían ser más críticos para entender el riesgo de diabetes en esta población. 
+
+Seguidamente, se presentan gráficos que permiten observar la relación entre la variable respuesta (presencia de diabetes) y distintas variables explicativas categóricas y continuas. Esta visualización facilita la detección de posibles asociaciones y patrones relevantes para el posterior análisis.
+
 ```{r, fig.height=8}
 # Cruzamos las categóricas con la respuesta
 
@@ -466,6 +511,9 @@ grid.arrange(graf2, graf3, graf4, graf5, graf6, graf7,
              ncol=2, nrow = 3)
 ```
 
+\newpage
+
+Se observa una mayor proporción de casos con diabetes en personas con obesidad, glucosa elevada, riesgo alto en DPF y aquellas con más de tres embarazos. Asimismo, la edad tiende a ser mayor en personas con diabetes. Estas relaciones sugieren que dichas variables podrían tener efecto sobre la probabilidad de desarrollar la enfermedad.
 
 ## Selección del modelo
 
