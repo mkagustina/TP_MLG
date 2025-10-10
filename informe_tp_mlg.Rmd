@@ -1,5 +1,5 @@
 ---
-fontsize: 11pt 
+fontsize: 11pt
 output: 
   pdf_document: 
     latex_engine: xelatex
@@ -45,7 +45,11 @@ include-in-header:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(fig.align="center", echo = FALSE, 
-                      warning = FALSE, message = FALSE)
+                      warning = FALSE, message = FALSE, 
+                      fig.width = 5.5, fig.height = 2.8,  
+                      fig.align = "center", dpi = 300)
+
+
 ```
 
 ```{r}
@@ -59,6 +63,24 @@ library(kableExtra)
 library(pROC)
 library(caret)
 library(broom) # Extrae info de los modelos ajustados
+
+# Estilo global de gráficos ggplot2
+theme_set(
+  theme_bw(base_size = 11) +
+    theme(
+      plot.title = element_blank(),           # sin título principal
+      plot.subtitle = element_blank(),        # sin subtítulo
+      plot.caption = element_blank(),         # caption lo maneja knitr
+      axis.title = element_text(size = 10, face = "bold"),
+      axis.text = element_text(size = 9),
+      legend.title = element_text(size = 10, face = "bold"),
+      legend.text = element_text(size = 9),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(linewidth = 0.3, colour = "grey85"),
+      strip.text = element_text(size = 10)    # para facet_wrap/facet_grid
+    )
+)
+
 options(scipen = 8) # Desactiva notación científica
 ```
 
@@ -123,13 +145,13 @@ datos_val <- datos %>%
   filter(!row_number() %in% as.numeric(rownames(datos_train)))
 ```
 
-## Introducción
+# Introducción
 
 La diabetes es una enfermedad metabólica crónica caracterizada por niveles elevados de glucosa en sangre, consecuencia de una producción insuficiente de insulina o de una resistencia del organismo a su acción. Esta condición puede derivar en complicaciones cardiovasculares, renales, neurológicas y visuales, afectando de manera significativa la calidad de vida de quienes la padecen.
 
 Dada la relevancia de esta enfermedad en términos de salud pública y su estrecha relación con factores fisiológicos y de estilo de vida, resulta fundamental comprender qué características individuales se asocian a un mayor riesgo de padecerla.
 
-## Material y métodos
+# Material y métodos
 
 El presente trabajo tiene como objetivo analizar los factores asociados a la presencia de diabetes en mujeres mayores de 21 años, a través de un modelo lineal generalizado con respuesta binaria. La variable respuesta analizada toma el valor 1 si la persona presenta diagnóstico de diabetes y 0 en caso contrario, por lo que se asume una distribución Bernoulli para cada observación.
 
@@ -397,11 +419,11 @@ Los datos muestran que un 33.2% de la población estudiada tiene diabetes, con u
 
 Seguidamente, se presentan gráficos que permiten observar la relación entre la variable respuesta (presencia de diabetes) y distintas variables explicativas categóricas y continuas. Esta visualización facilita la detección de posibles asociaciones y patrones relevantes para el posterior análisis.
 
-```{r, fig.height=8}
-# Cruzamos las categóricas con la respuesta
+\newpage
 
-# OBESIDAD
-graf2 <- ggplot(datos, aes(x = obesidad, fill = factor(diabetes))) +
+```{r fig-1}
+#| fig.cap: "Proporción de personas con diabetes según nivel de obesidad"
+ggplot(datos, aes(x = obesidad, fill = factor(diabetes))) +
   geom_bar(position = "fill", width = 0.7) +
   scale_fill_manual(
     values = c("aquamarine3", "pink3"),
@@ -409,17 +431,20 @@ graf2 <- ggplot(datos, aes(x = obesidad, fill = factor(diabetes))) +
     labels = c("No", "Sí")
   ) +
   scale_x_discrete(
-    labels = c(`0` = "Peso Normal o sobrepeso", `1` = "Obesidad")
+    labels = c("0" = "Peso normal o sobrepeso", "1" = "Obesidad")
   ) +
   labs(
     x = "Nivel de obesidad",
-    y = "Proporción",
-    caption = "Figura 1: Proporción de personas con diabetes según nivel de obesidad"
-  ) +
-  theme_minimal(base_size = 9)
+    y = "Proporción"
+  )
+```
 
+Se observa que la proporción de mujeres con diabetes es más alta para aquellas con obesidad en comparación a las pacientes sin obesidad.
+
+```{r}
+#| fig.cap: "Proporción de personas con diabetes según presión"
 # PRESIÓN
-graf3 <- ggplot(datos, aes(x = presion, fill = factor(diabetes))) +
+ggplot(datos, aes(x = presion, fill = factor(diabetes))) +
   geom_bar(position = "fill", width = 0.7) +
   scale_fill_manual(
     values = c("aquamarine3", "pink3"),
@@ -431,13 +456,17 @@ graf3 <- ggplot(datos, aes(x = presion, fill = factor(diabetes))) +
   ) +
   labs(
     x = "Presión",
-    y = "Proporción",
-    caption = "Figura 2: Proporción de personas con diabetes según presión"
-  ) +
-  theme_minimal(base_size = 9)
+    y = "Proporción"
+  )
+```
 
-# DPF
-graf4 <- ggplot(datos, aes(x = dpf, fill = factor(diabetes))) +
+La presión elevada puede estar influyendo en la probabilidad de padecer diabetes, dado que se puede ver una proporción más alta de diabéticas en las mujeres con presión elevada que en aquellas con presión normal.
+
+\newpage
+
+```{r}
+#| fig.cap: "Proporción de personas con diabetes según DPF"
+ggplot(datos, aes(x = dpf, fill = factor(diabetes))) +
   geom_bar(position = "fill", width = 0.7) +
   scale_fill_manual(
     values = c("aquamarine3", "pink3"),
@@ -449,13 +478,15 @@ graf4 <- ggplot(datos, aes(x = dpf, fill = factor(diabetes))) +
   ) +
   labs(
     x = "DPF",
-    y = "Proporción",
-    caption = "Figura 3: Proporción de personas con diabetes según DPF"
-  ) +
-  theme_minimal(base_size = 9)
+    y = "Proporción"
+    )
+```
 
-# GLUCOSA
-graf5 <- ggplot(datos, aes(x = glucosa, fill = factor(diabetes))) +
+Como es de esperarse, hay mayor proporción de diabéticas en aquellas mujeres con un DPF más alto comparando con las pacientes con DPF bajo. 
+
+```{r}
+#| fig.cap: "Proporción de personas con diabetes según nivel de glucosa"
+ggplot(datos, aes(x = glucosa, fill = factor(diabetes))) +
   geom_bar(position = "fill", width = 0.7) +
   scale_fill_manual(
     values = c("aquamarine3", "pink3"),
@@ -467,13 +498,17 @@ graf5 <- ggplot(datos, aes(x = glucosa, fill = factor(diabetes))) +
   ) +
   labs(
     x = "Nivel de glucosa",
-    y = "Proporción",
-    caption = "Figura 4: Proporción de personas con diabetes según nivel de glucosa"
-  ) +
-  theme_minimal(base_size = 9)
+    y = "Proporción"
+    )
+```
 
-# EMBARAZOS
-graf6 <- ggplot(datos, aes(x = embarazo, fill = factor(diabetes))) +
+La relación entre la glucosa y la diabetes es directa por la naturaleza de la enfermedad, hay mayor proporción de diabéticas en pacientes con glucosa elevada que en aquellas con niveles de glucosa normales.
+
+\newpage
+
+```{r}
+#| fig.cap: "Proporción de personas con diabetes según cantidad de embarazos"
+ggplot(datos, aes(x = embarazo, fill = factor(diabetes))) +
   geom_bar(position = "fill", width = 0.7) +
   scale_fill_manual(
     values = c("aquamarine3", "pink3"),
@@ -481,17 +516,19 @@ graf6 <- ggplot(datos, aes(x = embarazo, fill = factor(diabetes))) +
     labels = c("No", "Sí")
   ) +
   scale_x_discrete(
-    labels = c(`0` = "Ninguno", `1` = "1 a 3", `2` = "3 o más")
+    labels = c(`0` = "Ninguno", `1` = "1 a 3", `2` = "4 o más")
   ) +
   labs(
     x = "Cantidad de embarazos",
-    y = "Proporción",
-    caption = "Figura 5: Proporción de personas con diabetes según cantidad de embarazos"
-  ) +
-  theme_minimal(base_size = 9)
+    y = "Proporción"
+  )
+```
 
-# EDAD
-graf7 <- ggplot(datos, aes(x = factor(diabetes, 
+Parece haber un aumento en la proporción de mujeres con diabetes en aquellas que tuvieron 4 o más embarazos, y un descenso para las que tuvieron entre 1 y 3, en comparación a las mujeres que no tuvieron ningún embarazo.
+
+```{r}
+#| fig.cap: "Distribución de la edad según presencia de diabetes"
+ggplot(datos, aes(x = factor(diabetes, 
                                       labels = c("No", "Sí")),
                            y = edad,
                            fill = factor(diabetes, 
@@ -500,21 +537,16 @@ graf7 <- ggplot(datos, aes(x = factor(diabetes,
   scale_fill_manual(values = c("No" = "aquamarine", "Sí" = "pink3")) +
   labs(
     x = "Diabetes",
-    y = "Edad",
-    caption = "Figura 6: Distribución de la edad según presencia de diabetes"
-  ) +
-  theme_minimal(base_size = 9) +
+    y = "Edad"
+    ) +
   theme(legend.position = "none")  
-
-
-library(gridExtra)
-grid.arrange(graf2, graf3, graf4, graf5, graf6, graf7, 
-             ncol=2, nrow = 3)
 ```
 
-\newpage
+El 50% de las mujeres sin diabetes parece tener entre 23 y 30 años aproximadamente, mientras que el 50% de las mujeres con diabetes tienen entre 27 y 43 años aproximadamente. Esto habla de que las mujeres con diabetes en general tienen una edad mayor a las mujeres sin diabetes.
 
-Se observa una mayor proporción de casos con diabetes en personas con obesidad, glucosa elevada, riesgo alto en DPF y aquellas con más de tres embarazos. Asimismo, la edad tiende a ser mayor en personas con diabetes. Estas relaciones sugieren que dichas variables podrían tener efecto sobre la probabilidad de desarrollar la enfermedad.
+# Modelado estadístico
+
+El trabajo se realizará bajo el enfoque de modelos lineales generalizados, utilizando lo desarrollado por Nelder y Wedderburn. La función de enlace a utilizar es la función *logit*.
 
 ## Selección del modelo
 
@@ -570,7 +602,7 @@ Para modelar la probabilidad de presentar diabetes se empleó un modelo lineal g
 
 En primer lugar, se ajustó un modelo nulo, que incluye únicamente el intercepto, y un modelo completo que incorpora todas las variables explicativas consideradas: edad, glucosa, presión arterial, DPF, embarazo y obesidad.
 
-Posteriormente, se aplicaron procedimientos automáticos de selección de variables mediante los criterios de información AIC, utilizando los métodos de selección hacia adelante y hacia atrás. En ambos casos se obtuvo el mismo modelo final, compuesto únicamente por efectos principales.
+Posteriormente, se aplicaron procedimientos automáticos de selección de variables mediante la medida de criterio de la información  de Akaike eligiendo en cada paso el modelo con menor AIC, utilizando los métodos de selección hacia adelante y hacia atrás. En ambos casos se obtuvo el mismo modelo final, compuesto únicamente por efectos principales.
 
 A continuación, se exploró la posibilidad de incorporar interacciones de segundo orden entre las variables explicativas, ajustando un modelo ampliado y comparándolo con el modelo sin interacciones. Dado que la inclusión de interacciones no mejoró el ajuste, se mantuvo el modelo con efectos simples.
 
@@ -766,16 +798,30 @@ ggplot(datos_train, aes(sample = rQ)) +
 
 ## Capacidad predictiva del modelo
 
-```{r}
+Con el objetivo de evaluar la capacidad predictiva del modelo ajustado, se procedió a dividir la base de datos en dos subconjuntos: un conjunto de entrenamiento, utilizado para estimar los parámetros del modelo, y un conjunto de validación, empleado para evaluar su desempeño sobre observaciones no utilizadas en el ajuste. Esta separación permite obtener una medida más realista de la capacidad del modelo para generalizar a nuevos datos.
 
-# 1️⃣ Predecir probabilidades sobre el conjunto de validación
+A partir de las probabilidades estimadas en el conjunto de validación, se construyó la curva ROC, que representa la sensibilidad y especificidad frente a para distintos puntos de corte. Este gráfico permite analizar el equilibrio entre verdaderos positivos y falsos positivos, siendo un instrumento útil para determinar el umbral óptimo de clasificación.
+
+```{r}
 datos_train$prob <- predict(modelo, newdata = datos_train, type = "response")
 
 roc_train <- roc(datos_train$diabetes, datos_train$prob)
 plot(roc_train, col = "#2E86C1", lwd = 2, main = "Curva ROC (datos de validación)")
 best_cut <- coords(roc_train, "best", ret = "threshold", best.method = "youden")
 best_cut
+```
 
+El punto de corte seleccionado fue de 0.377, correspondiente al valor que maximiza simultáneamente la sensibilidad y la especificidad del modelo. Con este umbral se obtuvo la siguiente matriz de confusión, que resume el desempeño del modelo en la clasificación de los casos:
+
+| **Predicho / Observado** | **No diabetes** | **Diabetes** |
+| ------------------------ | :-------------: | :----------: |
+| **No diabetes**          |        31       |       7      |
+| **Diabetes**             |        10       |      11      |
+
+A partir de esta matriz, el modelo logró clasificar correctamente al 71% de las observaciones del conjunto de validación, con una sensibilidad del 61% (proporción de diabéticas correctamente identificadas) y una especificidad del 75.6% (proporción de no diabéticas correctamente clasificadas).
+
+```{r}
+#| include: false
 datos_val$prob <- predict(modelo, newdata = datos_val, type = "response")
 datos_val$pred <- ifelse(datos_val$prob > best_cut[1,1], 1, 0)
 confusionMatrix(
@@ -829,14 +875,14 @@ res %>%
   dplyr::select(term, RO_ajustada, IC_inf_ajustado, IC_sup_ajustado) %>% 
   kable(
     caption = "Razones de Odds estimadas por el modelo",
-    col.names = c("Variable", "$\\widehat{RO}$", "Límite inferior", "Límite superior"),
+    col.names = c("Variable", "$\\hat{RO}$", "Límite inferior", "Límite superior"),
     align = "c",
     format = "latex",
     booktabs = TRUE,
     escape = FALSE
   ) %>%
   add_header_above(
-    c(" " = 2, "IC de $\\widehat{RO}$" = 2),
+    c(" " = 2, "IC de $\\\\hat{RO}$" = 2),
     escape = FALSE) %>%
   kable_styling(
     latex_options = c("hold_position", "caption_position_bottom"),
