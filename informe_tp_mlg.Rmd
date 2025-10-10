@@ -58,6 +58,7 @@ library(statmod)
 library(kableExtra)
 library(pROC)
 library(caret)
+library(broom) # Extrae info de los modelos ajustados
 options(scipen = 8) # Desactiva notación científica
 ```
 
@@ -179,7 +180,7 @@ tabla_respuesta <- datos %>%
   count(diabetes) %>%
   mutate(
     Categoria = ifelse(diabetes == 1, "Sí", "No"),
-    Porcentaje = round(100 * n / sum(n), 1)
+    Porcentaje = round(100 * n / sum(n), 2)
   ) %>%
   dplyr::select(Categoria, Frecuencia = n, Porcentaje) %>%
   # Agregar fila de totales
@@ -216,7 +217,7 @@ tabla_obesidad <- datos %>%
       obesidad == 0 ~ "Peso Normal o sobrepeso",
       obesidad == 1 ~ "Obesidad",
     ),
-    Porcentaje = round(100 * n / sum(n), 1)
+    Porcentaje = round(100 * n / sum(n), 2)
   ) %>%
   dplyr::select(Categoria, Frecuencia = n, Porcentaje) %>% 
   # Agregar fila de totales
@@ -244,7 +245,7 @@ tabla_glucosa <- datos %>%
   count(glucosa) %>%
   mutate(
     Categoria = ifelse(glucosa == 1, "Elevada", "Normal"),
-    Porcentaje = round(100 * n / sum(n), 1)
+    Porcentaje = round(100 * n / sum(n), 2)
   ) %>%
   dplyr::select(Categoria, Frecuencia = n, Porcentaje) %>% 
   # Agregar fila de totales
@@ -272,7 +273,7 @@ tabla_presion <- datos %>%
   count(presion) %>%
   mutate(
     Categoria = ifelse(presion == 1, "Elevada", "Normal"),
-    Porcentaje = round(100 * n / sum(n), 1)
+    Porcentaje = round(100 * n / sum(n), 2)
   ) %>%
   dplyr::select(Categoria, Frecuencia = n, Porcentaje) %>% 
   # Agregar fila de totales
@@ -300,7 +301,7 @@ tabla_dpf <- datos %>%
   count(dpf) %>%
   mutate(
     Categoria = ifelse(dpf == 1, "Riesgo alto", "Riesgo bajo"),
-    Porcentaje = round(100 * n / sum(n), 1)
+    Porcentaje = round(100 * n / sum(n), 2)
   ) %>%
   dplyr::select(Categoria, Frecuencia = n, Porcentaje) %>% 
   # Agregar fila de totales
@@ -332,7 +333,7 @@ tabla_embarazo <- datos %>%
       embarazo == 1 ~ "1 a 3",
       embarazo == 2 ~ "Más de 3",
     ),
-    Porcentaje = round(100 * n / sum(n), 1)
+    Porcentaje = round(100 * n / sum(n), 2)
   ) %>%
   dplyr::select(Categoria, Frecuencia = n, Porcentaje) %>% 
   # Agregar fila de totales
@@ -358,9 +359,9 @@ tabla_embarazo %>%
 # Tabla descriptiva de edad
 tabla_edad <- datos %>%
   summarise(
-    Media_edad = mean(edad),
+    Media_edad = round(mean(edad),2),
     Mediana_edad = median(edad),
-    DE_edad = sd(edad),
+    DE_edad = round(sd(edad),2),
     Min_edad = min(edad),
     Max_edad = max(edad)
   ) %>%
@@ -413,7 +414,7 @@ graf2 <- ggplot(datos, aes(x = obesidad, fill = factor(diabetes))) +
   labs(
     x = "Nivel de obesidad",
     y = "Proporción",
-    caption = "Proporción de personas con diabetes según nivel de obesidad"
+    caption = "Figura 1: Proporción de personas con diabetes según nivel de obesidad"
   ) +
   theme_minimal(base_size = 9)
 
@@ -431,7 +432,7 @@ graf3 <- ggplot(datos, aes(x = presion, fill = factor(diabetes))) +
   labs(
     x = "Presión",
     y = "Proporción",
-    caption = "Proporción de personas con diabetes según presión"
+    caption = "Figura 2: Proporción de personas con diabetes según presión"
   ) +
   theme_minimal(base_size = 9)
 
@@ -449,7 +450,7 @@ graf4 <- ggplot(datos, aes(x = dpf, fill = factor(diabetes))) +
   labs(
     x = "DPF",
     y = "Proporción",
-    caption = "Proporción de personas con diabetes según DPF"
+    caption = "Figura 3: Proporción de personas con diabetes según DPF"
   ) +
   theme_minimal(base_size = 9)
 
@@ -467,7 +468,7 @@ graf5 <- ggplot(datos, aes(x = glucosa, fill = factor(diabetes))) +
   labs(
     x = "Nivel de glucosa",
     y = "Proporción",
-    caption = "Proporción de personas con diabetes según nivel de glucosa"
+    caption = "Figura 4: Proporción de personas con diabetes según nivel de glucosa"
   ) +
   theme_minimal(base_size = 9)
 
@@ -485,7 +486,7 @@ graf6 <- ggplot(datos, aes(x = embarazo, fill = factor(diabetes))) +
   labs(
     x = "Cantidad de embarazos",
     y = "Proporción",
-    caption = "Proporción de personas con diabetes según cantidad de embarazos"
+    caption = "Figura 5: Proporción de personas con diabetes según cantidad de embarazos"
   ) +
   theme_minimal(base_size = 9)
 
@@ -495,12 +496,12 @@ graf7 <- ggplot(datos, aes(x = factor(diabetes,
                            y = edad,
                            fill = factor(diabetes, 
                                          labels = c("No", "Sí")))) +
-  geom_boxplot(alpha = 0.7) +
+  geom_boxplot(alpha = 0.7, size = 0.3) +
   scale_fill_manual(values = c("No" = "aquamarine", "Sí" = "pink3")) +
   labs(
     x = "Diabetes",
     y = "Edad",
-    caption = "Distribución de la edad según presencia de diabetes"
+    caption = "Figura 6: Distribución de la edad según presencia de diabetes"
   ) +
   theme_minimal(base_size = 9) +
   theme(legend.position = "none")  
@@ -785,5 +786,76 @@ confusionMatrix(
 ```
 
 ## Resultados
+
+### Razones de odds
+
+```{r}
+# Extraemos coeficientes e IC para calcular RO
+res <- tidy(modelo, conf.int = TRUE) %>%
+  mutate(
+    RO = exp(estimate),
+    IC_inf = exp(conf.low),
+    IC_sup = exp(conf.high),
+    # Ajustamos la RO de la edad, para calcularla con un incremento de 5 años
+    RO_ajustada = if_else(term == "edad", 
+                          exp(estimate * 5), RO),
+    IC_inf_ajustado = if_else(term == "edad",
+                              exp(conf.low * 5), IC_inf),
+    IC_sup_ajustado = if_else(term == "edad",
+                              exp(conf.high * 5), IC_sup),
+    # Etiquetas más legibles
+    term = recode(term,
+      "edad" = "Edad (cambio en 5 años)",
+      "glucosa1" = "Glucosa (elevada vs. normal)",
+      "dpf1" = "DPF (alto vs. bajo)",
+      "obesidad1" = "Obesidad (sí vs. no)"
+    )
+  ) %>% 
+  filter(term != "(Intercept)") %>% 
+  arrange(desc(RO_ajustada))
+```
+
+```{r}
+# Tabla de resultados
+res_final <- res %>% 
+  dplyr::select(term, RO_ajustada, 
+                IC_sup_ajustado, IC_inf_ajustado)
+
+library(kableExtra)
+library(dplyr)
+library(plyr)
+
+res %>%
+  dplyr::select(term, RO_ajustada, IC_inf_ajustado, IC_sup_ajustado) %>% 
+  kable(
+    caption = "Razones de Odds estimadas por el modelo",
+    col.names = c("Variable", "$\\widehat{RO}$", "Límite inferior", "Límite superior"),
+    align = "c",
+    format = "latex",
+    booktabs = TRUE,
+    escape = FALSE
+  ) %>%
+  add_header_above(
+    c(" " = 2, "IC de $\\widehat{RO}$" = 2),
+    escape = FALSE) %>%
+  kable_styling(
+    latex_options = c("hold_position", "caption_position_bottom"),
+    full_width = FALSE
+  )
+
+# Gráfico de resultados
+ggplot(res, aes(x = RO_ajustada, y = fct_rev(term))) +
+  geom_point() +
+  geom_errorbarh(aes(xmin = IC_inf_ajustado, xmax = IC_sup_ajustado), height = 0.2) +
+  geom_vline(xintercept = 1, linetype = "dashed", color = "aquamarine3", linewidth = 0.8) +
+  scale_x_log10() +
+  labs(
+    x = "Razón de odds",
+    y = "Variable",
+    title = "Forest plot de Razones de odds (cambios en edad por 5 años)"
+  ) +
+  theme_minimal()
+```
+
 
 ## Conclusión
