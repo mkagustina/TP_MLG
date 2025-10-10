@@ -156,13 +156,13 @@ Las variables explicativas incluidas en el análisis se describen a continuació
     \item “1”: presión elevada (> 80 mmHg)
   \end{itemize}
 
-  \item Obesidad:medida a través del índice de masa corporal (IMC). Se definió con dos niveles:
+  \item Obesidad: medida a través del índice de masa corporal (IMC). Se definió con dos niveles:
   \begin{itemize}
     \item “0”: IMC menor a 30
     \item “1”: IMC igual o superior a 30
   \end{itemize}
 
-  \item DPF (Diabetes Pedigree Function):índice que cuantifica la predisposición genética a la diabetes a partir del historial familiar. Fue dicotomizado en:
+  \item DPF (Diabetes Pedigree Function): índice que cuantifica la predisposición genética a la diabetes a partir del historial familiar. Fue dicotomizado en:
   \begin{itemize}
     \item “0”: valores bajos (≤ 0.5)
     \item “1”: valores altos (> 0.5)
@@ -556,7 +556,7 @@ datos_train %>%
   mutate(prop = n / sum(n))
 ```
 
-```{r}
+```{r, results='hide'}
 modelo_int <- step(modelo,
                    scope = list(lower = ~ 1, 
                    upper = ~ (edad + glucosa  + dpf  + obesidad)^2,
@@ -565,10 +565,31 @@ modelo_int <- step(modelo,
                        k = 2))
 ```
 
+Para modelar la probabilidad de presentar diabetes se empleó un modelo lineal generalizado con función de enlace logit, dado que la variable respuesta es dicotómica (1 = presencia de diabetes, 0 = ausencia).
+
+En primer lugar, se ajustó un modelo nulo, que incluye únicamente el intercepto, y un modelo completo que incorpora todas las variables explicativas consideradas: edad, glucosa, presión arterial, DPF, embarazo y obesidad.
+
+Posteriormente, se aplicaron procedimientos automáticos de selección de variables mediante los criterios de información AIC, utilizando los métodos de selección hacia adelante y hacia atrás. En ambos casos se obtuvo el mismo modelo final, compuesto únicamente por efectos principales.
+
+A continuación, se exploró la posibilidad de incorporar interacciones de segundo orden entre las variables explicativas, ajustando un modelo ampliado y comparándolo con el modelo sin interacciones. Dado que la inclusión de interacciones no mejoró el ajuste, se mantuvo el modelo con efectos simples.
+
+El modelo lineal generalizado seleccionado se expresa como:
+
+$$
+\text{logit}(\pi_i) = \ln\left(\frac{\pi_i}{1 - \pi_i}\right) =
+\beta_0 + \beta_1\,\text{Edad}_i + \beta_2\,\text{Glucosa}_i +
+\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i
+$$
+
+
+
+
+
+
 ### Bondad de ajuste
 
 ```{r}
-pchisq(modelo$deviance, modelo$df.residual, ncp = 0, lower.tail = FALSE,log.p=FALSE)
+pchisq(modelo$deviance, modelo$df.residual, ncp = 0, lower.tail = FALSE,log.p=FALSE) # creo q esto es con deviance habria que hacer el de hosmer y lemeshow
 ```
 
 ## Verificación el enlace elegido
@@ -584,7 +605,9 @@ ggplot(datos_train, aes(y = modelo$linear.predictor, x = z)) +
   labs(title = "Working responses vs. predictor lineal", x = "Z" , y = expression(eta)) +
   geom_abline(intercept = 0, slope = 1) +
   theme_minimal()
+```
 
+```{r}
 pred.logit <- predict(modelo)
 datos_train$pred.2.logit <- pred.logit*pred.logit
 modelo_logit.2 <- glm(diabetes ~ glucosa + obesidad + edad + dpf + pred.2.logit, 
@@ -593,6 +616,7 @@ modelo_logit.2 <- glm(diabetes ~ glucosa + obesidad + edad + dpf + pred.2.logit,
 anova(modelo, modelo_logit.2, test = 'LRT')
 summary(modelo_logit.2)
 ```
+
 
 ## Curvas ajustadas
 
