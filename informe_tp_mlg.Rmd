@@ -157,42 +157,42 @@ En este trabajo se busca identificar los factores con mayor incidencia en la pro
 
 # Material y métodos
 
-El presente trabajo tiene como objetivo analizar los factores asociados a la presencia de diabetes en 391 mujeres mayores de 21 años, a través de un modelo lineal generalizado con respuesta binaria. La variable respuesta analizada toma el valor 1 si la persona presenta diagnóstico de diabetes y 0 en caso contrario, por lo que se asume una distribución Bernoulli para cada observación.
+El presente trabajo tiene como objetivo analizar los factores asociados a la presencia de diabetes en 391 mujeres mayores de 21 años, a través de un modelo lineal generalizado con respuesta binaria. De los 391 datos disponibles, la muestra se dividió para el análisis predictivo. Se utilizó un conjunto de entrenamiento de 332 observaciones para ajustar el modelo. Las 59 observaciones restantes se reservaron como conjunto de validación para evaluar la capacidad predictiva. La variable respuesta analizada toma el valor 1 si la persona presenta diagnóstico de diabetes y 0 en caso contrario, por lo que se asume una distribución Bernoulli para cada observación.
 
 Las variables explicativas incluidas en el análisis se describen a continuación:
 
 \begin{itemize}
-  \item **Edad**: medida en años. Es una variable cuantitativa continua que permite evaluar el efecto del envejecimiento sobre la probabilidad de desarrollar diabetes.
+  \item \textbf{Edad}: medida en años. Es una variable cuantitativa continua que permite evaluar el efecto del envejecimiento sobre la probabilidad de desarrollar diabetes.
 
-  \item **Embarazo**: número de veces que la mujer ha estado embarazada, categorizada en tres niveles:
+  \item \textbf{Embarazo}: número de veces que la mujer ha estado embarazada, categorizada en tres niveles:
   \begin{itemize}
     \item “0”: ninguna gestación
     \item “1”: entre una y tres gestaciones
     \item “2”: más de tres gestaciones
   \end{itemize}
 
-  \item **Glucosa**: concentración de glucosa en ayunas. Fue categorizada en dos niveles:
+  \item \textbf{Glucosa}: concentración de glucosa en ayunas. Fue categorizada en dos niveles:
   \begin{itemize}
-    \item “0”: valores normales (≤ 100 mg/dL)
-    \item “1”: valores elevados (> 100 mg/dL)
+    \item “0”: valores normales ($≤$ 100 mg/dL)
+    \item “1”: valores elevados ($>$ 100 mg/dL)
   \end{itemize}
 
-  \item **Presión arterial**: presión diastólica medida en mmHg, clasificada en dos niveles:
+  \item \textbf{Presión arterial}: presión diastólica medida en mmHg, clasificada en dos niveles:
   \begin{itemize}
-    \item “0”: presión dentro del rango normal (≤ 80 mmHg)
-    \item “1”: presión elevada (> 80 mmHg)
+    \item “0”: presión dentro del rango normal ($≤$ 80 mmHg)
+    \item “1”: presión elevada ($>$ 80 mmHg)
   \end{itemize}
 
-  \item **Obesidad**: medida a través del índice de masa corporal (IMC). Se definió con dos niveles:
+  \item \textbf{Obesidad}: medida a través del índice de masa corporal (IMC). Se definió con dos niveles:
   \begin{itemize}
     \item “0”: IMC menor a 30
     \item “1”: IMC igual o superior a 30
   \end{itemize}
 
-  \item **Función de predisposición (DPF)**: índice que cuantifica la predisposición genética a la diabetes a partir del historial familiar. Fue dicotomizado en:
+  \item \textbf{Función de predisposición (DPF)}: índice que cuantifica la predisposición genética a la diabetes a partir del historial familiar. Fue dicotomizado en:
   \begin{itemize}
-    \item “0”: valores bajos (≤ 0.5)
-    \item “1”: valores altos (> 0.5)
+    \item “0”: valores bajos ($≤$ 0.5)
+    \item “1”: valores altos ($>$ 0.5)
   \end{itemize}
 \end{itemize}
 
@@ -201,7 +201,7 @@ Las variables explicativas incluidas en el análisis se describen a continuació
 A continuación se presenta una visión general de las características clave de la población estudiada.
 
 ```{r}
-datos %>%
+tabla_diabetes <- datos %>%
   count(diabetes) %>%
   mutate(
     Categoria = ifelse(diabetes == 1, "Sí", "No"),
@@ -214,6 +214,20 @@ datos %>%
       Frecuencia = sum(.$Frecuencia),
       Porcentaje = 100
     )
+  )
+
+# Mostrar tabla 
+tabla_diabetes %>%
+  kable(
+    caption = "Frecuencias absolutas y relativas de diabetes",
+    col.names = c("Obesidad", "Frecuencia", "Porcentaje (%)"),
+    align = "c",
+    format = "latex",    
+    booktabs = TRUE       
+  ) %>%
+  kable_styling(
+    latex_options = c("hold_position", "caption_position_bottom"),
+    full_width = FALSE
   )
 ```
 
@@ -607,6 +621,7 @@ $$
 \beta_0 + \beta_1\,\text{Edad}_i + \beta_2\,\text{Glucosa}_i +
 \beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i \quad i=\overline{1,332}
 $$
+
 ## Ajuste y estudio del modelo
 
 ```{r, results='hide'}
@@ -618,7 +633,7 @@ library(ResourceSelection)
 hoslem.test(x = modelo$y, y = fitted(modelo), g = 10)
 ```
 
-Se realizó el ajuste del modelo en R y para evaluar la bondad de ajuste, se aplicó la prueba de Hosmer y Lemeshow. Esta prueba compara las frecuencias observadas y esperadas del evento de interés en grupos formados a partir de los valores predichos por el modelo y dado el tamaño muestral disponible, se optó por dividir las observaciones en 10 grupos de igual tamaño según los valores de probabilidad predicha. Finalmente, se concluye que el modelo presenta un ajuste adecuado a los datos ($p-value = 0.7069$).
+Se realizó el ajuste del modelo y para evaluar la bondad de ajuste, se aplicó la prueba de Hosmer y Lemeshow. Esta prueba compara las frecuencias observadas y esperadas del evento de interés en grupos formados a partir de los valores predichos por el modelo y dado el tamaño muestral disponible, se optó por dividir las observaciones en 10 grupos de igual tamaño según los valores de probabilidad predicha. Finalmente, se concluye que el modelo presenta un ajuste adecuado a los datos ($p-value = 0.7069$).
 
 ```{r, eval=FALSE}
 probs <- fitted(modelo)
@@ -717,7 +732,6 @@ $$
 \beta_6\,\text{Edad4}_i +
 \beta_7\,\text{Edad5}_i
 $$
-
 Ambos modelos fueron comparados mediante la prueba de razón de verosimilitud. Dado que la diferencia en el ajuste entre el modelo con edad tratada como ordinal y el modelo con las variables dummies no resultó estadísticamente significativa, se concluye que la relación entre la edad y el logit de la probabilidad de diabetes puede considerarse lineal ($p-value = 0.6408$). Por tanto, se mantiene la variable edad como cuantitativa continua en el modelo final.
 
 Considerando los resultados del estudio del modelo a través de los diferentes tests de hipótesis, el ajuste realizado es el siguiente:
@@ -733,6 +747,8 @@ $$
 El análisis de residuos permite evaluar la adecuación del modelo ajustado, tanto en lo que respecta a la componente sistemática como a la aleatoria.
 
 Con el objetivo de analizar la estructura del modelo, se construyó el gráfico de los residuos cuantil frente a las probabilidades estimadas bajo el enlace logit. 
+
+\newpage
 
 ```{r, fig.cap='Gráfico de residuos cuantil vs. las probabilidades estimadas'}
 # Residuos cuantil
@@ -876,7 +892,9 @@ ggplot(res, aes(x = RO_ajustada, y = fct_rev(term))) +
   )
 ```
 
-De la Tabla 8 y la Figura 10 se extrae que:
+\newpage
+
+De la Tabla 9 y la Figura 10 se extrae que:
 
 - La chance de tener diabetes para las mujeres con glucosa elevada es entre 3.24 y 15.68 veces la misma chance para mujeres con niveles de glucosa normales, para niveles fijos de obesidad, DPF y misma edad.
 
@@ -924,7 +942,7 @@ nuevo <- nuevo %>%
 #| fig.cap: "Probabilidad predicha de diabetes según edad y combinación de factores" 
 # Graficar
 ggplot(nuevo, aes(x = edad, y = prob, color = combinacion)) +
-  geom_line(linewidth = 0.8) +
+  geom_line(linewidth = 0.6) +
   labs(
     x = "Edad",
     y = "Probabilidad predicha de diabetes",
