@@ -48,8 +48,6 @@ knitr::opts_chunk$set(fig.align="center", echo = FALSE,
                       warning = FALSE, message = FALSE, 
                       fig.width = 5.5, fig.height = 2.8,  
                       fig.align = "center", dpi = 300)
-
-
 ```
 
 ```{r}
@@ -63,6 +61,7 @@ library(kableExtra)
 library(pROC)
 library(caret)
 library(broom) # Extrae info de los modelos ajustados
+library(dplyr)
 
 # Estilo global de gráficos ggplot2
 theme_set(
@@ -92,7 +91,7 @@ diabetes <- read_csv("diabetes.csv")
 ```{r}
 # Modificacion de la base
 datos_crudo <- diabetes %>% 
-  rename(
+  dplyr::rename(
     glucosa = "Glucose",
     presion = "BloodPressure",
     piel = "SkinThickness",
@@ -763,38 +762,39 @@ ggplot(nuevo, aes(x = edad, y = prob)) +
   theme_minimal(base_size = 13)
 ```
 
+El análisis de residuos permite evaluar la adecuación del modelo ajustado, tanto en lo que respecta a la componente sistemática como a la aleatoria.
 
-## Análisis de residuos
+Con el objetivo de analizar la estructura del modelo, se construyó el gráfico de los residuos cuantil frente a las probabilidades estimadas bajo el enlace logit. 
 
-### Evaluación de la componente sistemática
-Observe como se ve el gráfico de los residuos vs. las medias estimadas bajo el enlace logit:
-```{r}
+```{r, fig.cap='Gráfico de residuos cuantil vs. las probabilidades estimadas'}
 # Residuos cuantil
 rQ <- qresid(modelo)
 
-# Mu estimado
-
-### Gráfico de residuos cuantil vs. probabilidades estimadas (ajuste cloglog)
+# Gráfico de residuos cuantil vs. probabilidades estimadas (ajuste cloglog)
 ggplot(datos_train, aes(y = rQ, x = fitted(modelo))) + 
-  geom_point(fill = "aquamarine3", shape = 21, size = 3) +
+  geom_point(fill = "aquamarine3", shape = 21, size = 1.8) +
   geom_hline(yintercept = 0) + ylim(-3, 3) + 
   geom_hline(yintercept = -3, linetype = "dashed") + 
   geom_hline(yintercept =  3, linetype = "dashed") +
-  labs(title = "Gráfico de residuos cuantil vs. las probabilidades estimadas", x = expression(hat(pi)), y = "Residuos cuantil") +
+  labs(x = expression(hat(pi)), y = "Residuos cuantil") +
   theme_minimal()
 ```
 
-### Evaluación de la componente aleatoria
+En este gráfico, la mayoría de los puntos se distribuyen de manera aleatoria alrededor de la línea horizontal en cero, sin evidenciar un patrón sistemático.  
+Esto sugiere que la función de enlace logit es adecuada y que el modelo logra capturar correctamente la relación entre las variables explicativas y la probabilidad de presentar diabetes.
 
-Mediante un gráfico QQ puede evaluarse si la distribución supuesta es adecuada.
+Además, para verificar la adecuación de la distribución supuesta de los errores, se empleó un gráfico QQ de los residuos cuantil. 
 
-```{r, fig.width = 4*1.33*2}
+```{r, fig.cap='Gráfico probabilístico normal con residuos cuantil'}
 ggplot(datos_train, aes(sample = rQ)) +
-  stat_qq(distribution = qnorm, fill = "aquamarine3", shape = 21, size = 3) +
+  stat_qq(distribution = qnorm, fill = "aquamarine3", shape = 21, size = 1.8) +
   stat_qq_line() +
-  labs(title = "Gráfico probabilístico normal con residuos deviance est.",  x = "Cuantiles teóricos", y = "Cuantiles de los residuos dev. est.") +
+  labs(x = "Cuantiles teóricos", y = "Cuantiles de los residuos cuantil") +
   theme_minimal()
 ```
+
+En dicho gráfico se observa que los puntos siguen aproximadamente la línea de referencia, con ligeras desviaciones en los extremos.  
+Por lo tanto, puede concluirse que no existen desviaciones importantes respecto a la distribución esperada, indicando un ajuste razonablemente bueno del modelo.
 
 ## Capacidad predictiva del modelo
 
@@ -802,13 +802,12 @@ Con el objetivo de evaluar la capacidad predictiva del modelo ajustado, se proce
 
 A partir de las probabilidades estimadas en el conjunto de validación, se construyó la curva ROC, que representa la sensibilidad y especificidad frente a para distintos puntos de corte. Este gráfico permite analizar el equilibrio entre verdaderos positivos y falsos positivos, siendo un instrumento útil para determinar el umbral óptimo de clasificación.
 
-```{r}
+```{r, fig.cap='Curva ROC'}
 datos_train$prob <- predict(modelo, newdata = datos_train, type = "response")
 
 roc_train <- roc(datos_train$diabetes, datos_train$prob)
-plot(roc_train, col = "#2E86C1", lwd = 2, main = "Curva ROC (datos de validación)")
+plot(roc_train, col = "#2E86C1", lwd = 2)
 best_cut <- coords(roc_train, "best", ret = "threshold", best.method = "youden")
-best_cut
 ```
 
 El punto de corte seleccionado fue de 0.377, correspondiente al valor que maximiza simultáneamente la sensibilidad y la especificidad del modelo. Con este umbral se obtuvo la siguiente matriz de confusión, que resume el desempeño del modelo en la clasificación de los casos:
@@ -836,6 +835,8 @@ confusionMatrix(
 ### Razones de odds
 
 ```{r}
+library(plyr)
+
 # Extraemos coeficientes e IC para calcular RO
 res <- tidy(modelo, conf.int = TRUE) %>%
   mutate(
@@ -867,10 +868,6 @@ res_final <- res %>%
   dplyr::select(term, RO_ajustada, 
                 IC_sup_ajustado, IC_inf_ajustado)
 
-library(kableExtra)
-library(dplyr)
-library(plyr)
-
 res %>%
   dplyr::select(term, RO_ajustada, IC_inf_ajustado, IC_sup_ajustado) %>% 
   kable(
@@ -888,7 +885,9 @@ res %>%
     latex_options = c("hold_position", "caption_position_bottom"),
     full_width = FALSE
   )
+```
 
+```{r, fig.cap='Forest plot de Razones de odds (cambios en edad por 5 años)'}
 # Gráfico de resultados
 ggplot(res, aes(x = RO_ajustada, y = fct_rev(term))) +
   geom_point() +
@@ -897,8 +896,7 @@ ggplot(res, aes(x = RO_ajustada, y = fct_rev(term))) +
   scale_x_log10() +
   labs(
     x = "Razón de odds",
-    y = "Variable",
-    title = "Forest plot de Razones de odds (cambios en edad por 5 años)"
+    y = "Variable"
   ) +
   theme_minimal()
 ```
