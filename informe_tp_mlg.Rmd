@@ -53,15 +53,17 @@ knitr::opts_chunk$set(fig.align="center", echo = FALSE,
 ```{r}
 # Carga de librerías
 library(readr)
-library(tidyverse)
-library(skimr)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(forcats)
 library(MASS)
 library(statmod)
 library(kableExtra)
 library(pROC)
 library(caret)
 library(broom) # Extrae info de los modelos ajustados
-library(dplyr)
+
 
 # Estilo global de gráficos ggplot2
 theme_set(
@@ -130,6 +132,7 @@ datos_crudo <- diabetes %>%
 datos <-  datos_crudo %>% 
   dplyr::select(edad, glucosa, presion, dpf, embarazo, obesidad,
                 diabetes)
+datos <- as.data.frame(datos)
 ```
 
 ```{r}
@@ -150,41 +153,43 @@ La diabetes es una enfermedad metabólica crónica caracterizada por niveles ele
 
 Dada la relevancia de esta enfermedad en términos de salud pública y su estrecha relación con factores fisiológicos y de estilo de vida, resulta fundamental comprender qué características individuales se asocian a un mayor riesgo de padecerla.
 
+En este trabajo se busca identificar los factores con mayor incidencia en la probabilidad de padecer diabetes, aplicando un modelo lineal generalizado con enlace logit sobre una muestra de mujeres adultas.
+
 # Material y métodos
 
-El presente trabajo tiene como objetivo analizar los factores asociados a la presencia de diabetes en mujeres mayores de 21 años, a través de un modelo lineal generalizado con respuesta binaria. La variable respuesta analizada toma el valor 1 si la persona presenta diagnóstico de diabetes y 0 en caso contrario, por lo que se asume una distribución Bernoulli para cada observación.
+El presente trabajo tiene como objetivo analizar los factores asociados a la presencia de diabetes en 391 mujeres mayores de 21 años, a través de un modelo lineal generalizado con respuesta binaria. La variable respuesta analizada toma el valor 1 si la persona presenta diagnóstico de diabetes y 0 en caso contrario, por lo que se asume una distribución Bernoulli para cada observación.
 
 Las variables explicativas incluidas en el análisis se describen a continuación:
 
 \begin{itemize}
-  \item Edad: medida en años. Es una variable cuantitativa continua que permite evaluar el efecto del envejecimiento sobre la probabilidad de desarrollar diabetes.
+  \item **Edad**: medida en años. Es una variable cuantitativa continua que permite evaluar el efecto del envejecimiento sobre la probabilidad de desarrollar diabetes.
 
-  \item Embarazo: número de veces que la mujer ha estado embarazada, categorizada en tres niveles:
+  \item **Embarazo**: número de veces que la mujer ha estado embarazada, categorizada en tres niveles:
   \begin{itemize}
     \item “0”: ninguna gestación
     \item “1”: entre una y tres gestaciones
     \item “2”: más de tres gestaciones
   \end{itemize}
 
-  \item Glucosa: concentración de glucosa en ayunas. Fue categorizada en dos niveles:
+  \item **Glucosa**: concentración de glucosa en ayunas. Fue categorizada en dos niveles:
   \begin{itemize}
     \item “0”: valores normales (≤ 100 mg/dL)
     \item “1”: valores elevados (> 100 mg/dL)
   \end{itemize}
 
-  \item Presión arterial: presión diastólica medida en mmHg, clasificada en dos niveles:
+  \item **Presión arterial**: presión diastólica medida en mmHg, clasificada en dos niveles:
   \begin{itemize}
     \item “0”: presión dentro del rango normal (≤ 80 mmHg)
     \item “1”: presión elevada (> 80 mmHg)
   \end{itemize}
 
-  \item Obesidad: medida a través del índice de masa corporal (IMC). Se definió con dos niveles:
+  \item **Obesidad**: medida a través del índice de masa corporal (IMC). Se definió con dos niveles:
   \begin{itemize}
     \item “0”: IMC menor a 30
     \item “1”: IMC igual o superior a 30
   \end{itemize}
 
-  \item DPF (Diabetes Pedigree Function): índice que cuantifica la predisposición genética a la diabetes a partir del historial familiar. Fue dicotomizado en:
+  \item **Función de predisposición (DPF)**: índice que cuantifica la predisposición genética a la diabetes a partir del historial familiar. Fue dicotomizado en:
   \begin{itemize}
     \item “0”: valores bajos (≤ 0.5)
     \item “1”: valores altos (> 0.5)
@@ -196,29 +201,19 @@ Las variables explicativas incluidas en el análisis se describen a continuació
 A continuación se presenta una visión general de las características clave de la población estudiada.
 
 ```{r}
-# Frecuencias absolutas y relativas de DIABETES
-tabla_respuesta <- datos %>%
+datos %>%
   count(diabetes) %>%
   mutate(
     Categoria = ifelse(diabetes == 1, "Sí", "No"),
     Porcentaje = round(100 * n / sum(n), 2)
   ) %>%
   dplyr::select(Categoria, Frecuencia = n, Porcentaje) %>%
-  # Agregar fila de totales
-  rbind(c("Total", sum(.$Frecuencia), 100))
-
-# Mostrar tabla 
-tabla_respuesta %>%
-  kable(
-    caption = "Frecuencias absolutas y relativas de diabetes",
-    col.names = c("Diabetes", "Frecuencia", "Porcentaje (%)"),
-    align = "c",
-    format = "latex",     
-    booktabs = TRUE       
-  ) %>%
-  kable_styling(
-    latex_options = c("hold_position", "caption_position_bottom"),
-    full_width = FALSE
+  bind_rows(
+    tibble(
+      Categoria = "Total",
+      Frecuencia = sum(.$Frecuencia),
+      Porcentaje = 100
+    )
   )
 ```
 
@@ -545,7 +540,7 @@ El 50% de las mujeres sin diabetes parece tener entre 23 y 30 años aproximadame
 
 # Modelado estadístico
 
-El trabajo se realizará bajo el enfoque de modelos lineales generalizados, utilizando lo desarrollado por Nelder y Wedderburn. La función de enlace a utilizar es la función *logit*.
+El trabajo se realizará bajo el enfoque de modelos lineales generalizados, utilizando lo desarrollado por Nelder y Wedderburn. 
 
 ## Selección del modelo
 
@@ -597,7 +592,7 @@ modelo_int <- step(modelo,
                        k = 2))
 ```
 
-Para modelar la probabilidad de presentar diabetes se empleó un modelo lineal generalizado con función de enlace logit, dado que la variable respuesta es dicotómica (1 = presencia de diabetes, 0 = ausencia).
+Para modelar la probabilidad de presentar diabetes se empleó un modelo con función de enlace logit, dado que la variable respuesta es dicotómica (1 = presencia de diabetes, 0 = ausencia).
 
 En primer lugar, se ajustó un modelo nulo, que incluye únicamente el intercepto, y un modelo completo que incorpora todas las variables explicativas consideradas: edad, glucosa, presión arterial, DPF, embarazo y obesidad.
 
@@ -605,15 +600,14 @@ Posteriormente, se aplicaron procedimientos automáticos de selección de variab
 
 A continuación, se exploró la posibilidad de incorporar interacciones de segundo orden entre las variables explicativas, ajustando un modelo ampliado y comparándolo con el modelo sin interacciones. Dado que la inclusión de interacciones no mejoró el ajuste, se mantuvo el modelo con efectos simples.
 
-El modelo lineal generalizado seleccionado se expresa como:
+El modelo seleccionado se expresa como:
 
 $$
 \text{logit}(\pi_i) = \ln\left(\frac{\pi_i}{1 - \pi_i}\right) =
 \beta_0 + \beta_1\,\text{Edad}_i + \beta_2\,\text{Glucosa}_i +
-\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i
+\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i \quad i=\overline{1,332}
 $$
-
-
+## Ajuste y estudio del modelo
 
 ```{r, results='hide'}
 pchisq(modelo$deviance, modelo$df.residual, ncp = 0, lower.tail = FALSE,log.p=FALSE) # creo q esto es con deviance habria que hacer el de hosmer y lemeshow
@@ -624,12 +618,7 @@ library(ResourceSelection)
 hoslem.test(x = modelo$y, y = fitted(modelo), g = 10)
 ```
 
-Para evaluar la bondad de ajuste del modelo seleccionado, se aplicó la prueba de Hosmer y Lemeshow.
-Esta prueba compara las frecuencias observadas y esperadas del evento de interés en grupos formados a partir de los valores predichos por el modelo.
-
-Dado el tamaño muestral disponible, se optó por dividir las observaciones en 10 grupos de igual tamaño según los valores de probabilidad predicha.
-
-Finalmente, se concluye que el modelo presenta un ajuste adecuado a los datos ($p-value = 0.7069$).
+Se realizó el ajuste del modelo en R y para evaluar la bondad de ajuste, se aplicó la prueba de Hosmer y Lemeshow. Esta prueba compara las frecuencias observadas y esperadas del evento de interés en grupos formados a partir de los valores predichos por el modelo y dado el tamaño muestral disponible, se optó por dividir las observaciones en 10 grupos de igual tamaño según los valores de probabilidad predicha. Finalmente, se concluye que el modelo presenta un ajuste adecuado a los datos ($p-value = 0.7069$).
 
 ```{r, eval=FALSE}
 probs <- fitted(modelo)
@@ -654,8 +643,7 @@ anova(modelo, modelo_logit.2, test = 'LRT')
 summary(modelo_logit.2)
 ```
 
-Además, se evaluó la adecuación de la función de enlace logit utilizada en el modelo.
-Para ello, se aplicó el test de especificación de la función de enlace, que consiste en incorporar al modelo un término adicional cuadrático del predictor lineal estimado:
+Además, se evaluó la adecuación de la función de enlace logit utilizada en el modelo. Para ello, se aplicó el test de especificación de la función de enlace, que consiste en incorporar al modelo un término adicional cuadrático del predictor lineal estimado:
 
 $$
 \begin{aligned}
@@ -666,9 +654,7 @@ M2)\quad \text{logit}(\pi_i) &= \beta_0 + \beta_1\,\text{Edad}_i + \beta_2\,\tex
 \end{aligned}
 $$
 
-El procedimiento implica ajustar un modelo extendido que incluye esta nueva variable y comparar su ajuste con el modelo original mediante una prueba de razón de verosimilitud.
-
-En este análisis, la comparación entre ambos modelos no mostró evidencia suficiente para rechazar la adecuación del enlace logit, por lo que se considera apropiado mantenerlo en el modelo final ($p-value = 0.6489$).
+El procedimiento implica ajustar un modelo extendido que incluye esta nueva variable y comparar su ajuste con el modelo original mediante una prueba de razón de verosimilitud. En este análisis, la comparación entre ambos modelos no mostró evidencia suficiente para rechazar la adecuación del enlace logit, por lo que se considera apropiado mantenerlo en el modelo final ($p-value = 0.6489$).
 
 ```{r, results='hide'}
 quantile(datos_train$edad, probs = c(0.2,0.4,0.6,0.8))
@@ -734,33 +720,15 @@ $$
 
 Ambos modelos fueron comparados mediante la prueba de razón de verosimilitud. Dado que la diferencia en el ajuste entre el modelo con edad tratada como ordinal y el modelo con las variables dummies no resultó estadísticamente significativa, se concluye que la relación entre la edad y el logit de la probabilidad de diabetes puede considerarse lineal ($p-value = 0.6408$). Por tanto, se mantiene la variable edad como cuantitativa continua en el modelo final.
 
-## Curvas ajustadas
+Considerando los resultados del estudio del modelo a través de los diferentes tests de hipótesis, el ajuste realizado es el siguiente:
 
-```{r}
-# Calcular probabilidades predichas
-datos_train$prob <- predict(modelo, datos_train, type = "response")
-# Crear grid de edades (por ejemplo de 20 a 80)
-nuevo <- data.frame(
-  edad = seq(min(datos_train$edad), max(datos_train$edad), by = 1),
-  dpf = factor(1, levels = levels(datos_train$dpf)),
-  obesidad = factor(1, levels = levels(datos_train$obesidad)),
-  glucosa = factor(1, levels = levels(datos_train$glucosa))
-)
+$$
+\text{logit}(\hat{\pi_i}) = \ln\left(\frac{\hat{\pi_i}}{1 - \hat{\pi_i}}\right) =
+-6.04 + 0.07\cdot\text{Edad}_i + 1.91\cdot\text{Glucosa}_i +
+0.98\cdot\text{DPF}_i + 1.47\cdot\text{Obesidad}_i \quad i=\overline{1,332}
+$$
 
-# Calcular probabilidades predichas manteniendo los demás factores en 0
-nuevo$prob <- predict(modelo, newdata = nuevo, type = "response")
-
-# Graficar
-ggplot(nuevo, aes(x = edad, y = prob)) +
-  geom_line(size = 1.1, color = "#0072B2") +
-  labs(
-    x = "Edad",
-    y = "Probabilidad predicha de diabetes",
-    title = "Probabilidad de diabetes según edad (dpf, obesidad y glucosa en 0)"
-  ) +
-  lims(y = c(0, 1)) +
-  theme_minimal(base_size = 13)
-```
+## Análisis de residuos
 
 El análisis de residuos permite evaluar la adecuación del modelo ajustado, tanto en lo que respecta a la componente sistemática como a la aleatoria.
 
@@ -796,7 +764,7 @@ ggplot(datos_train, aes(sample = rQ)) +
 En dicho gráfico se observa que los puntos siguen aproximadamente la línea de referencia, con ligeras desviaciones en los extremos.  
 Por lo tanto, puede concluirse que no existen desviaciones importantes respecto a la distribución esperada, indicando un ajuste razonablemente bueno del modelo.
 
-## Capacidad predictiva del modelo
+## Estudio de la capacidad predictiva del modelo
 
 Con el objetivo de evaluar la capacidad predictiva del modelo ajustado, se procedió a dividir la base de datos en dos subconjuntos: un conjunto de entrenamiento, utilizado para estimar los parámetros del modelo, y un conjunto de validación, empleado para evaluar su desempeño sobre observaciones no utilizadas en el ajuste. Esta separación permite obtener una medida más realista de la capacidad del modelo para generalizar a nuevos datos.
 
@@ -817,7 +785,7 @@ El punto de corte seleccionado fue de 0.377, correspondiente al valor que maximi
 | **No diabetes**          |        31       |       7      |
 | **Diabetes**             |        10       |      11      |
 
-A partir de esta matriz, el modelo logró clasificar correctamente al 71% de las observaciones del conjunto de validación, con una sensibilidad del 61% (proporción de diabéticas correctamente identificadas) y una especificidad del 75.6% (proporción de no diabéticas correctamente clasificadas).
+El modelo logró clasificar correctamente al 71% de las observaciones del conjunto de validación, con una sensibilidad del 61% (proporción de diabéticas correctamente identificadas) y una especificidad del 75.6% (proporción de no diabéticas correctamente clasificadas).
 
 ```{r}
 #| include: false
@@ -830,9 +798,13 @@ confusionMatrix(
 )
 ```
 
-## Resultados
+# Resultados
 
-### Razones de odds
+En esta sección se presentan los principales hallazgos obtenidos a partir del modelo final ajustado. En primer lugar, se exponen las razones de odds estimadas para cada variable significativa, seguidas por la representación gráfica de las mismas. Posteriormente, se incluyen las curvas ajustadas que ilustran la probabilidad predicha de diabetes bajo diferentes combinaciones de factores.
+
+## Razones de odds
+
+Las razones de odds permiten cuantificar la variación en la probabilidad de padecer diabetes ante cambios en las variables explicativas, manteniendo constantes las demás condiciones.
 
 ```{r}
 library(plyr)
@@ -840,16 +812,16 @@ library(plyr)
 # Extraemos coeficientes e IC para calcular RO
 res <- tidy(modelo, conf.int = TRUE) %>%
   mutate(
-    RO = exp(estimate),
-    IC_inf = exp(conf.low),
-    IC_sup = exp(conf.high),
+    RO = round(exp(estimate), 2),
+    IC_inf = round(exp(conf.low), 2),
+    IC_sup = round(exp(conf.high), 2),
     # Ajustamos la RO de la edad, para calcularla con un incremento de 5 años
     RO_ajustada = if_else(term == "edad", 
-                          exp(estimate * 5), RO),
+                          round(exp(estimate * 5), 2), RO),
     IC_inf_ajustado = if_else(term == "edad",
-                              exp(conf.low * 5), IC_inf),
+                              round(exp(conf.low * 5), 2), IC_inf),
     IC_sup_ajustado = if_else(term == "edad",
-                              exp(conf.high * 5), IC_sup),
+                              round(exp(conf.high * 5), 2), IC_sup),
     # Etiquetas más legibles
     term = recode(term,
       "edad" = "Edad (cambio en 5 años)",
@@ -879,7 +851,7 @@ res %>%
     escape = FALSE
   ) %>%
   add_header_above(
-    c(" " = 2, "IC de $\\\\hat{RO}$" = 2),
+    c(" " = 2, "IC $\\\\hat{RO}$" = 2),
     escape = FALSE) %>%
   kable_styling(
     latex_options = c("hold_position", "caption_position_bottom"),
@@ -893,13 +865,83 @@ ggplot(res, aes(x = RO_ajustada, y = fct_rev(term))) +
   geom_point() +
   geom_errorbarh(aes(xmin = IC_inf_ajustado, xmax = IC_sup_ajustado), height = 0.2) +
   geom_vline(xintercept = 1, linetype = "dashed", color = "aquamarine3", linewidth = 0.8) +
-  scale_x_log10() +
+  scale_x_continuous(
+    limits = c(0, 20), 
+    breaks = c(1, 5, 10, 15, 20)
+  ) +
+  scale_y_discrete(labels = function(y) gsub(" \\(", "\n(", y)) +
   labs(
     x = "Razón de odds",
     y = "Variable"
-  ) +
-  theme_minimal()
+  )
 ```
 
+De la Tabla 8 y la Figura 10 se extrae que:
 
-## Conclusión
+- La chance de tener diabetes para las mujeres con glucosa elevada es entre 3.24 y 15.68 veces la misma chance para mujeres con niveles de glucosa normales, para niveles fijos de obesidad, DPF y misma edad.
+
+- La chance de tener diabetes para mujeres con obesidad es entre 1.25 y 7.85 veces mayor a la misma chance para mujeres sin obesidad, con niveles fijos de glucosa, dpf y misma edad.
+
+- La chance de tener diabetes para mujeres con dpf alto es entre un 54% y un 362% mayor que la misma chance para mujeres con dpf bajo, para niveles fijes de glucosa, obesidad y misma edad.
+
+- La chance de tener diabetes aumenta entre un 26% y un 69% al aumentar la edad de la mujer en 5 años, para niveles fijos de glucosa, obesidad y dpf.
+
+## Probabilidades ajustadas
+
+Las curvas de probabilidades ajustadas permiten visualizar cómo se modifica el riesgo estimado para los diferentes perfiles en estudio y la tendencia creciente de la probabilidad de diabetes con la edad.
+
+```{r}
+# Crear grid con todas las combinaciones posibles
+nuevo <- expand.grid(
+  edad = seq(min(datos$edad), max(datos$edad), by = 1),
+  dpf = levels(datos$dpf),
+  obesidad = levels(datos$obesidad),
+  glucosa = levels(datos$glucosa)
+)
+
+# Calcular probabilidades predichas
+nuevo$prob <- predict(modelo, newdata = nuevo, type = "response")
+
+# Crear etiqueta combinada
+nuevo <- nuevo %>%
+  mutate(
+    combinacion = paste0("DPF:", dpf, " | Obesidad:", obesidad, " | Glucosa:", glucosa)
+  )
+
+# Calcular el valor final de probabilidad para cada combinación
+orden_leyenda <- nuevo %>%
+  group_by(combinacion) %>%
+  filter(edad == max(edad)) %>% 
+  arrange(desc(prob)) %>% 
+  pull(combinacion)
+
+# Reordenar factor de la leyenda según la probabilidad final
+nuevo <- nuevo %>%
+  mutate(combinacion = factor(combinacion, levels = orden_leyenda))
+```
+
+```{r}
+#| fig.cap: "Probabilidad predicha de diabetes según edad y combinación de factores" 
+# Graficar
+ggplot(nuevo, aes(x = edad, y = prob, color = combinacion)) +
+  geom_line(linewidth = 0.8) +
+  labs(
+    x = "Edad",
+    y = "Probabilidad predicha de diabetes",
+    color = "Combinación de factores"
+  ) +
+  lims(y = c(0, 1)) +
+  theme(
+    legend.position = "right",
+    legend.text = element_text(size = 8)
+  )
+
+```
+
+Dado que el modelo no contempla interacciones, se observa que para todos los perfiles hay un aumento en la probabilidad de tener diabetes al aumentar la edad de la paciente. Además, se destaca que la curva que está por debajo de las restantes corresponde a las mujeres sin obesidad, con niveles de glucosa normales y un DPF normal, mientras que la curva por encima de las otras, es la de las mujeres con obesidad, niveles de glucosa elevados y un DPF alto.
+
+# Conclusión
+
+El presente trabajo permitió ajustar y evaluar un modelo lineal generalizado con enlace logit para estudiar los factores asociados a la presencia de diabetes en una muestra de mujeres adultas. A través de un proceso de selección, diagnóstico y validación, se obtuvo un modelo parsimonioso y con un buen nivel de ajuste según las pruebas aplicadas.
+
+El análisis evidenció que los niveles de glucosa en ayunas, la obesidad, los antecedentes familiares (DPF) y la edad contribuyen significativamente a explicar la probabilidad de padecer diabetes. La validación del modelo, mediante la curva ROC y la matriz de confusión, mostró una capacidad predictiva adecuada, confirmando su utilidad para clasificar correctamente una proporción importante de los casos.
