@@ -614,63 +614,6 @@ En primer lugar, se aplicaron los métodos de selección de variables hacia adel
 
 A continuación, se exploró la posibilidad de incorporar interacciones de segundo orden entre las variables explicativas, ajustando un modelo ampliado y comparándolo con el modelo sin interacciones. Dado que la inclusión de interacciones no mejoró el ajuste, se mantuvo el modelo de efectos principales.
 
-El modelo seleccionado se expresa como:
-
-$$
-\text{logit}(\pi_i) = \ln\left(\frac{\pi_i}{1 - \pi_i}\right) =
-\beta_0 + \beta_1\,\text{Edad}_i + \beta_2\,\text{Glucosa}_i +
-\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i \quad i=\overline{1,332}
-$$
-
-## Bondad del ajuste y estimación del modelo
-
-```{r, results='hide'}
-pchisq(modelo$deviance, modelo$df.residual, ncp = 0, lower.tail = FALSE,log.p=FALSE) # creo q esto es con deviance habria que hacer el de hosmer y lemeshow
-
-library(ResourceSelection)
-
-# Prueba de Hosmer y Lemeshow
-hoslem.test(x = modelo$y, y = fitted(modelo), g = 10)
-```
-
-Para evaluar la bondad de ajuste del modelo, se aplicó la prueba de Hosmer y Lemeshow. Esta prueba compara las frecuencias observadas y esperadas del evento de interés en grupos formados a partir de los valores predichos por el modelo y dado el tamaño muestral disponible, se optó por dividir las observaciones en 10 grupos de igual tamaño según los valores de probabilidad predicha. Finalmente, se concluye que el modelo presenta un ajuste adecuado a los datos ($p-value = 0.7069$).
-
-```{r, eval=FALSE}
-probs <- fitted(modelo)
-# Working responses
-z <- resid(modelo, type = "working") + modelo$linear.predictor
-
-# Gráfico de working responses vs. predictor lineal
-ggplot(datos_train, aes(y = modelo$linear.predictor, x = z)) + 
-  geom_point(fill = "orange", shape = 21, size = 3) +
-  labs(title = "Working responses vs. predictor lineal", x = "Z" , y = expression(eta)) +
-  geom_abline(intercept = 0, slope = 1) +
-  theme_minimal()  # esto no se incluye
-```
-
-```{r, results='hide'}
-pred.logit <- predict(modelo)
-datos_train$pred.2.logit <- pred.logit*pred.logit
-modelo_logit.2 <- glm(diabetes ~ glucosa + obesidad + edad + dpf + pred.2.logit, 
-                        family=binomial(link="logit"), 
-                        data=datos_train)
-anova(modelo, modelo_logit.2, test = 'LRT')
-summary(modelo_logit.2)
-```
-
-Además, se evaluó la adecuación de la función de enlace logit utilizada en el modelo. Para ello, se aplicó el test de especificación de la función de enlace, que consiste en incorporar al modelo un término adicional cuadrático del predictor lineal estimado:
-
-$$
-\begin{aligned}
-M1)\quad \text{logit}(\pi_i) &= \beta_0 + \beta_1\,\text{Edad}_i + \beta_2\,\text{Glucosa}_i + 
-\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i \\
-M2)\quad \text{logit}(\pi_i) &= \beta_0 + \beta_1\,\text{Edad}_i + \beta_2\,\text{Glucosa}_i + 
-\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i + \beta_5\,\hat{\eta}_i^2
-\end{aligned}
-$$
-
-El procedimiento implica ajustar un modelo extendido que incluye esta nueva variable y comparar su ajuste con el modelo original mediante una prueba de razón de verosimilitud. En este análisis, la comparación entre ambos modelos no mostró evidencia suficiente para rechazar la adecuación del enlace logit, por lo que se considera apropiado mantenerlo en el modelo final ($p-value = 0.6489$).
-
 ```{r, results='hide'}
 quantile(datos_train$edad, probs = c(0.2,0.4,0.6,0.8))
 datos_train <- datos_train %>%
@@ -732,7 +675,64 @@ $$
 \beta_6\,\text{Edad4}_i +
 \beta_7\,\text{Edad5}_i
 $$
-Ambos modelos fueron comparados mediante la prueba de razón de verosimilitud. Dado que la diferencia en el ajuste entre el modelo con edad tratada como ordinal y el modelo con las variables dummies no resultó estadísticamente significativa, se concluye que la relación entre la edad y el logit de la probabilidad de diabetes puede considerarse lineal ($p-value = 0.6408$). Por tanto, se mantiene la variable edad como cuantitativa continua en el modelo final.
+Ambos modelos fueron comparados mediante la prueba de razón de verosimilitud. Dado que la diferencia en el ajuste entre el modelo con edad tratada como ordinal y el modelo con las variables dummies no resultó estadísticamente significativa, se concluye que la relación entre la edad y el logit de la probabilidad de diabetes puede considerarse lineal ($p-value = 0.6408$). Por ende, se mantiene el efecto lineal de la variable edad en el modelo.
+
+Por lo tanto, el modelo seleccionado se expresa como:
+
+$$
+\text{logit}(\pi_i) = \ln\left(\frac{\pi_i}{1 - \pi_i}\right) =
+\beta_0 + \beta_1\,\text{Edad}_i + \beta_2\,\text{Glucosa}_i +
+\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i \quad i=\overline{1,332}
+$$
+
+## Bondad del ajuste y estimación del modelo
+
+```{r, results='hide'}
+pchisq(modelo$deviance, modelo$df.residual, ncp = 0, lower.tail = FALSE,log.p=FALSE) # creo q esto es con deviance habria que hacer el de hosmer y lemeshow
+
+library(ResourceSelection)
+
+# Prueba de Hosmer y Lemeshow
+hoslem.test(x = modelo$y, y = fitted(modelo), g = 10)
+```
+
+Para evaluar la bondad de ajuste del modelo, se aplicó la prueba de Hosmer y Lemeshow. Esta prueba compara las frecuencias observadas y esperadas del evento de interés en grupos formados a partir de los valores predichos por el modelo y dado el tamaño muestral disponible, se optó por dividir las observaciones en 10 grupos de igual tamaño según los valores de probabilidad predicha. Finalmente, se concluye que el modelo presenta un ajuste adecuado a los datos ($p-value = 0.7069$).
+
+```{r, eval=FALSE}
+probs <- fitted(modelo)
+# Working responses
+z <- resid(modelo, type = "working") + modelo$linear.predictor
+
+# Gráfico de working responses vs. predictor lineal
+ggplot(datos_train, aes(y = modelo$linear.predictor, x = z)) + 
+  geom_point(fill = "orange", shape = 21, size = 3) +
+  labs(title = "Working responses vs. predictor lineal", x = "Z" , y = expression(eta)) +
+  geom_abline(intercept = 0, slope = 1) +
+  theme_minimal()  # esto no se incluye
+```
+
+```{r, results='hide'}
+pred.logit <- predict(modelo)
+datos_train$pred.2.logit <- pred.logit*pred.logit
+modelo_logit.2 <- glm(diabetes ~ glucosa + obesidad + edad + dpf + pred.2.logit, 
+                        family=binomial(link="logit"), 
+                        data=datos_train)
+anova(modelo, modelo_logit.2, test = 'LRT')
+summary(modelo_logit.2)
+```
+
+Además, se evaluó la adecuación de la función de enlace logit utilizada en el modelo. Para ello, se aplicó el test de especificación de la función de enlace, que consiste en incorporar al modelo un término adicional cuadrático del predictor lineal estimado:
+
+$$
+\begin{aligned}
+M1)\quad \text{logit}(\pi_i) &= \beta_0 + \beta_1\,\text{Edad}_i + \beta_2\,\text{Glucosa}_i + 
+\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i \\
+M2)\quad \text{logit}(\pi_i) &= \beta_0 + \beta_1\,\text{Edad}_i + \beta_2\,\text{Glucosa}_i + 
+\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i + \beta_5\,\hat{\eta}_i^2
+\end{aligned}
+$$
+
+El procedimiento implica ajustar un modelo extendido que incluye esta nueva variable y comparar su ajuste con el modelo original mediante una prueba de razón de verosimilitud. En este análisis, la comparación entre ambos modelos no mostró evidencia suficiente para rechazar la adecuación del enlace logit, por lo que se considera apropiado mantenerlo en el modelo final ($p-value = 0.6489$).
 
 Considerando los resultados del estudio del modelo a través de los diferentes tests de hipótesis, el ajuste realizado es el siguiente:
 
