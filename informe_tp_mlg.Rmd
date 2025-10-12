@@ -220,7 +220,7 @@ tabla_diabetes <- datos %>%
 tabla_diabetes %>%
   kable(
     caption = "Frecuencias absolutas y relativas de diabetes",
-    col.names = c("Obesidad", "Frecuencia", "Porcentaje (%)"),
+    col.names = c("Diabetes", "Frecuencia", "Porcentaje (%)"),
     align = "c",
     format = "latex",    
     booktabs = TRUE       
@@ -604,15 +604,15 @@ modelo_int <- step(modelo,
                        direction = "forward",
                        trace = TRUE,
                        k = 2))
+anova(modelo, modelo_int)
+# Si bien la selección hacia adelante deja una interacción doble, esta no es significativa según el test de RV
 ```
 
-Para modelar la probabilidad de presentar diabetes se empleó un modelo con función de enlace logit, dado que la variable respuesta es dicotómica (1 = presencia de diabetes, 0 = ausencia).
+Para modelar la probabilidad de presentar diabetes en mujeres mayores a 21 años, en función de las variables explicativas edad, glucosa, presión arterial, DPF, embarazo y obesidad, se propuso emplear un modelo con función de enlace logit.
 
-En primer lugar, se ajustó un modelo nulo, que incluye únicamente el intercepto, y un modelo completo que incorpora todas las variables explicativas consideradas: edad, glucosa, presión arterial, DPF, embarazo y obesidad.
+En primer lugar, se aplicaron los métodos de selección de variables hacia adelante y hacia atrás, eligiendo en cada paso el modelo con menor medida de la información de Akaike (AIC). En ambos casos se obtuvo el mismo modelo final, compuesto únicamente por 4 efectos principales: los de edad, glucosa, DPF y obesidad.
 
-Posteriormente, se aplicaron procedimientos automáticos de selección de variables mediante la medida de criterio de la información  de Akaike eligiendo en cada paso el modelo con menor AIC, utilizando los métodos de selección hacia adelante y hacia atrás. En ambos casos se obtuvo el mismo modelo final, compuesto únicamente por efectos principales.
-
-A continuación, se exploró la posibilidad de incorporar interacciones de segundo orden entre las variables explicativas, ajustando un modelo ampliado y comparándolo con el modelo sin interacciones. Dado que la inclusión de interacciones no mejoró el ajuste, se mantuvo el modelo con efectos simples.
+A continuación, se exploró la posibilidad de incorporar interacciones de segundo orden entre las variables explicativas, ajustando un modelo ampliado y comparándolo con el modelo sin interacciones. Dado que la inclusión de interacciones no mejoró el ajuste, se mantuvo el modelo de efectos principales.
 
 El modelo seleccionado se expresa como:
 
@@ -622,7 +622,7 @@ $$
 \beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i \quad i=\overline{1,332}
 $$
 
-## Ajuste y estudio del modelo
+## Bondad del ajuste y estimación del modelo
 
 ```{r, results='hide'}
 pchisq(modelo$deviance, modelo$df.residual, ncp = 0, lower.tail = FALSE,log.p=FALSE) # creo q esto es con deviance habria que hacer el de hosmer y lemeshow
@@ -633,7 +633,7 @@ library(ResourceSelection)
 hoslem.test(x = modelo$y, y = fitted(modelo), g = 10)
 ```
 
-Se realizó el ajuste del modelo y para evaluar la bondad de ajuste, se aplicó la prueba de Hosmer y Lemeshow. Esta prueba compara las frecuencias observadas y esperadas del evento de interés en grupos formados a partir de los valores predichos por el modelo y dado el tamaño muestral disponible, se optó por dividir las observaciones en 10 grupos de igual tamaño según los valores de probabilidad predicha. Finalmente, se concluye que el modelo presenta un ajuste adecuado a los datos ($p-value = 0.7069$).
+Para evaluar la bondad de ajuste del modelo, se aplicó la prueba de Hosmer y Lemeshow. Esta prueba compara las frecuencias observadas y esperadas del evento de interés en grupos formados a partir de los valores predichos por el modelo y dado el tamaño muestral disponible, se optó por dividir las observaciones en 10 grupos de igual tamaño según los valores de probabilidad predicha. Finalmente, se concluye que el modelo presenta un ajuste adecuado a los datos ($p-value = 0.7069$).
 
 ```{r, eval=FALSE}
 probs <- fitted(modelo)
