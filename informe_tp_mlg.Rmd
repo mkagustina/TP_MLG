@@ -755,9 +755,10 @@ Con el objetivo de analizar la estructura del modelo, se construyó el gráfico 
 rQ <- qresid(modelo)
 
 # Gráfico de residuos cuantil vs. probabilidades estimadas (ajuste cloglog)
-ggplot(datos_train, aes(y = rQ, x = fitted(modelo))) + 
+ggplot() + 
+  aes(y = rQ, x = fitted(modelo)) +
   geom_point(fill = "aquamarine3", shape = 21, size = 1.8) +
-  geom_hline(yintercept = 0) + ylim(-3, 3) + 
+  geom_hline(yintercept = 0) +
   geom_hline(yintercept = -3, linetype = "dashed") + 
   geom_hline(yintercept =  3, linetype = "dashed") +
   labs(x = expression(hat(pi)), y = "Residuos cuantil") +
@@ -790,7 +791,7 @@ A partir de las probabilidades estimadas en el conjunto de validación, se const
 datos_train$prob <- predict(modelo, newdata = datos_train, type = "response")
 
 roc_train <- roc(datos_train$diabetes, datos_train$prob)
-plot(roc_train, col = "#2E86C1", lwd = 2)
+plot(roc_train, col = "aquamarine3", lwd = 2)
 best_cut <- coords(roc_train, "best", ret = "threshold", best.method = "youden")
 ```
 
