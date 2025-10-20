@@ -162,7 +162,7 @@ El presente trabajo tiene como objetivo analizar los factores asociados a la pre
 Las variables explicativas incluidas en el análisis se describen a continuación:
 
 \begin{itemize}
-  \item \textbf{Edad}: medida en años. Es una variable cuantitativa continua que permite evaluar el efecto del envejecimiento sobre la probabilidad de desarrollar diabetes.
+  \item \textbf{Edad}: medida en años. Es una variable cuantitativa continua.
 
   \item \textbf{Embarazo}: número de veces que la mujer ha estado embarazada, categorizada en tres niveles:
   \begin{itemize}
@@ -177,7 +177,7 @@ Las variables explicativas incluidas en el análisis se describen a continuació
     \item “1”: valores elevados ($>$ 100 mg/dL)
   \end{itemize}
 
-  \item \textbf{Presión arterial}: presión diastólica medida en mmHg, clasificada en dos niveles:
+  \item \textbf{Presión arterial}: presión diastólica, clasificada en dos niveles:
   \begin{itemize}
     \item “0”: presión dentro del rango normal ($≤$ 80 mmHg)
     \item “1”: presión elevada ($>$ 80 mmHg)
@@ -682,21 +682,34 @@ Por lo tanto, el modelo seleccionado se expresa como:
 $$
 \text{logit}(\pi_i) = \ln\left(\frac{\pi_i}{1 - \pi_i}\right) =
 \beta_0 + \beta_1\,\text{Edad}_i + \beta_2\,\text{Glucosa}_i +
-\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i \quad i=\overline{1,332}
+\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i, \quad i=\overline{1,332}
 $$
 
+\noindent
+donde:
+
+\begin{itemize}
+  \item $\text{Glucosa}_i = 
+  \begin{cases}
+    1 & \text{si } \text{Glucosa} > 100 \\
+    0 & \text{si } \text{Glucosa} \leq 100
+  \end{cases}$
+  
+  \item $\text{DPF}_i = 
+  \begin{cases}
+    1 & \text{si } \text{Diabetes Pedigree Function} > 0.5 \\
+    0 & \text{si } \text{Diabetes Pedigree Function} \leq 0.5
+  \end{cases}$  
+
+  \item $\text{Obesidad}_i = 
+  \begin{cases}
+    1 & \text{si } \text{IMC} \geq 30 \\
+    0 & \text{si } \text{IMC} < 30
+  \end{cases}$
+\end{itemize}
+
+
 ## Bondad del ajuste y estimación del modelo
-
-```{r, results='hide'}
-pchisq(modelo$deviance, modelo$df.residual, ncp = 0, lower.tail = FALSE,log.p=FALSE) # creo q esto es con deviance habria que hacer el de hosmer y lemeshow
-
-library(ResourceSelection)
-
-# Prueba de Hosmer y Lemeshow
-hoslem.test(x = modelo$y, y = fitted(modelo), g = 10)
-```
-
-Para evaluar la bondad de ajuste del modelo, se aplicó la prueba de Hosmer y Lemeshow. Esta prueba compara las frecuencias observadas y esperadas del evento de interés en grupos formados a partir de los valores predichos por el modelo y dado el tamaño muestral disponible, se optó por dividir las observaciones en 10 grupos de igual tamaño según los valores de probabilidad predicha. Finalmente, se concluye que el modelo presenta un ajuste adecuado a los datos ($p-value = 0.7069$).
 
 ```{r, eval=FALSE}
 probs <- fitted(modelo)
@@ -721,18 +734,29 @@ anova(modelo, modelo_logit.2, test = 'LRT')
 summary(modelo_logit.2)
 ```
 
-Además, se evaluó la adecuación de la función de enlace logit utilizada en el modelo. Para ello, se aplicó el test de especificación de la función de enlace, que consiste en incorporar al modelo un término adicional cuadrático del predictor lineal estimado:
+Se evalúa la adecuación de la función de enlace logit utilizada en el modelo aplicando el test de especificación de la función de enlace, que consiste en incorporar al modelo un término adicional cuadrático del predictor lineal estimado:
 
 $$
 \begin{aligned}
 M1)\quad \text{logit}(\pi_i) &= \beta_0 + \beta_1\,\text{Edad}_i + \beta_2\,\text{Glucosa}_i + 
-\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i \\
+\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i \quad i=\overline{1,332}\\
 M2)\quad \text{logit}(\pi_i) &= \beta_0 + \beta_1\,\text{Edad}_i + \beta_2\,\text{Glucosa}_i + 
-\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i + \beta_5\,\hat{\eta}_i^2
+\beta_3\,\text{DPF}_i + \beta_4\,\text{Obesidad}_i + \beta_5\,\hat{\eta}_i^2 \quad i=\overline{1,332}
 \end{aligned}
 $$
 
 El procedimiento implica ajustar un modelo extendido que incluye esta nueva variable y comparar su ajuste con el modelo original mediante una prueba de razón de verosimilitud. En este análisis, la comparación entre ambos modelos no mostró evidencia suficiente para rechazar la adecuación del enlace logit, por lo que se considera apropiado mantenerlo en el modelo final ($p-value = 0.6489$).
+
+```{r, results='hide'}
+pchisq(modelo$deviance, modelo$df.residual, ncp = 0, lower.tail = FALSE,log.p=FALSE) # esto es con deviance habria que hacer el de hosmer y lemeshow
+
+library(ResourceSelection)
+
+# Prueba de Hosmer y Lemeshow
+hoslem.test(x = modelo$y, y = fitted(modelo), g = 10)
+```
+
+Además, para evaluar la bondad de ajuste del modelo, se aplicó la prueba de Hosmer y Lemeshow. Esta prueba compara las frecuencias observadas y esperadas del evento de interés en grupos formados a partir de los valores predichos por el modelo y dado el tamaño muestral disponible, se optó por dividir las observaciones en 10 grupos de igual tamaño según los valores de probabilidad predicha. Finalmente, se concluye que el modelo presenta un ajuste adecuado a los datos ($p-value = 0.7069$).
 
 Considerando los resultados del estudio del modelo a través de los diferentes tests de hipótesis, el ajuste realizado es el siguiente:
 
@@ -868,7 +892,7 @@ res %>%
     escape = FALSE
   ) %>%
   add_header_above(
-    c(" " = 2, "IC $\\\\hat{RO}$" = 2),
+    c(" " = 2, "IC $RO$" = 2),
     escape = FALSE) %>%
   kable_styling(
     latex_options = c("hold_position", "caption_position_bottom"),
